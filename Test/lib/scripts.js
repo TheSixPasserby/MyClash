@@ -24,7 +24,10 @@ const SCRIPTS = [
   },
 ];
 
-/** 脚本文件路径列表（供兼容性检查模块使用） */
-const SCRIPT_FILES = SCRIPTS.map((s) => s.file);
+// Meow 使用独立回归套件，避免套用 Mihomo 专属 DNS、直连节点等断言。
+const MEOW_SCRIPT = 'MeowScript.js';
 
-module.exports = { SCRIPTS, SCRIPT_FILES };
+/** 脚本文件路径列表（供兼容性检查模块使用，包含 Meow） */
+const SCRIPT_FILES = [...SCRIPTS.map((s) => s.file), MEOW_SCRIPT];
+
+module.exports = { SCRIPTS, MEOW_SCRIPT, SCRIPT_FILES };

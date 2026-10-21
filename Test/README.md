@@ -1,6 +1,6 @@
 # MyClash 覆写脚本测试
 
-对 `Script/Script.js`（精简版）与 `Script/mihomoScript.js`（全量版）两个覆写脚本的自动化测试。
+对 `Script/Script.js`（精简版）、`Script/mihomoScript.js`（全量版）及 `MeowScript.js` 的自动化测试。
 
 ## 运行方式
 
@@ -62,6 +62,8 @@ npm --prefix Test install
 
 ## 文件结构
 
+Meow 使用独立回归套件，覆盖极简模式自动选择和自建节点组合、分组引用与循环、前置直连规则、QUIC 开关，以及 DNS 和国内媒体直连适配。三个脚本均参加 ES2020 与 QuickJS 检查；模拟订阅测试不替代实际内核的启动及联网验证。
+
 ```text
 Test/
 ├── package.json            # npm test / test:es2020 / test:quickjs 脚本
@@ -76,7 +78,8 @@ Test/
 │   └── quickjs-check.js    # QuickJS 兼容性验证逻辑（语法解析/顶层执行/main 调用）
 └── suites/
     ├── unit.js             # 纯函数单元测试
-    └── integration.js      # main() 集成测试
+    ├── integration.js      # Mihomo main() 集成测试
+    └── meow.js             # Meow 适配与极简模式回归测试
 ```
 
 ## 说明

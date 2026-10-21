@@ -5,9 +5,10 @@ const { Harness } = require('./lib/harness');
 const fx = require('./lib/fixtures');
 const { runUnitTests } = require('./suites/unit');
 const { runIntegrationTests } = require('./suites/integration');
+const { runMeowTests } = require('./suites/meow');
 const { runES2020Checks } = require('./lib/es2020-check');
 const { runQuickJSChecks } = require('./lib/quickjs-check');
-const { SCRIPTS } = require('./lib/scripts');
+const { SCRIPTS, MEOW_SCRIPT } = require('./lib/scripts');
 
 // 运行范围筛选：--node / --es2020 / --quickjs；不传参数则全部运行
 const ARGS = new Set(process.argv.slice(2));
@@ -58,6 +59,15 @@ async function main() {
       totalPassed += s.passed;
       totalFailed += s.failed;
     }
+
+    console.log(`\n${'='.repeat(64)}`);
+    console.log(`  测试对象: Meow 适配版  (${MEOW_SCRIPT})`);
+    console.log(`${'='.repeat(64)}`);
+    const hMeow = new Harness('Meow 适配版');
+    runMeowTests(hMeow, fx);
+    const sm = hMeow.summary();
+    totalPassed += sm.passed;
+    totalFailed += sm.failed;
   }
 
   // ES2020 兼容性检查（语法 + 内置 API 静态扫描，未安装 espree 时自动跳过）

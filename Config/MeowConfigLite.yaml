@@ -5733,6 +5733,7 @@ dns:
     'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT']
     'rule-set:cn': *chinaDNS
     'rule-set:geolocation-cn': *chinaDNS
+    '+.ctaiot.com': *chinaDNS # meow 无 direct-nameserver，新增直连域名显式走国内 DNS
 
 hosts:
   'doh.pub': ['1.12.12.12', '120.53.53.53']
@@ -6083,6 +6084,7 @@ rules:
   - RULE-SET,microsoft_cn,直连
   - DOMAIN,fsend.cn,直连
   - DOMAIN,international-gfe.download.nvidia.com,直连
+  - DOMAIN-SUFFIX,ctaiot.com,直连
 
   # 禁用国外 QUIC 流量
   - SUB-RULE,meow-quic

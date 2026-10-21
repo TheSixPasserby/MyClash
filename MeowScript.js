@@ -2,6 +2,7 @@
  * meow 配置覆写脚本（Clash Nyanpasu / meow alpha 适配版）
  * 原作者：AIsouler
  * 适配目标：meow 0.25.0-alpha+801ada1（2026-10-20 核对官方源码）
+ * 已同步原脚本：0c7a93a（2026-10-21，极简模式自动选择与 ctaiot.com 直连）。
  * 保留原版服务分流、地区/倍率分组、自定义节点及 hosts 处理。
  * meow 暂无节点 ip-version、sticky-sessions、default-selected 等功能，已改用可用配置。
  * TUN 沿用输入配置和客户端设置，不强制启用实验性 global 路由；IPv6 默认关闭。
@@ -5778,6 +5779,7 @@ const prefixRules = [
   'RULE-SET,microsoft_cn,直连',
   'DOMAIN,fsend.cn,直连',
   'DOMAIN,international-gfe.download.nvidia.com,直连',
+  'DOMAIN-SUFFIX,ctaiot.com,直连',
 ];
 
 // 此处添加自定义节点，填入下方[]内（可选，留空则不生成“自建节点”策略组）
@@ -6688,14 +6690,25 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
   const customGroupNames = customGroup ? [customGroup.name] : [];
 
   if (minimalModeEnabled) {
+    const autoSelectGroupEnabled = ruleOptionsEnable.自动选择;
+
+    const finalRuleProviders = { ...baseRuleProviders };
+    if (!blockForeignQuicEnabled) delete finalRuleProviders.cn_additional;
+
     const defaultGroup = {
       ...selectBaseOption,
       name: '默认代理',
-      proxies: allProxiesNames,
+      proxies: [...allProxiesNames, ...(autoSelectGroupEnabled ? ['自动选择'] : [])],
       icon: `${iconBaseUrl}Proxy.svg`,
     };
-    const finalRuleProviders = { ...baseRuleProviders };
-    if (!blockForeignQuicEnabled) delete finalRuleProviders.cn_additional;
+
+    const autoSelectGroup = {
+      ...urlTestBaseOption,
+      name: '自动选择',
+      proxies: allProxiesNames,
+      hidden: true,
+    };
+
     const directGroup = {
       ...selectBaseOption,
       name: '直连',
@@ -6706,12 +6719,12 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
     const globalGroup = {
       ...selectBaseOption,
       name: 'GLOBAL',
-      proxies: ['默认代理', ...customGroupNames, '直连'],
+      proxies: ['默认代理', ...customGroupNames, ...(autoSelectGroupEnabled ? [autoSelectGroup.name] : []), '直连'],
       icon: `${iconBaseUrl}Global.svg`,
     };
     return {
       globalGroup,
-      functionalGroups: [defaultGroup],
+      functionalGroups: [defaultGroup, ...(autoSelectGroupEnabled ? [autoSelectGroup] : [])],
       functionalRules: [],
       finalRuleProviders,
       directGroup,
@@ -7200,6 +7213,8 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
       'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT'],
       'rule-set:cn': chinaDNS,
       'rule-set:geolocation-cn': chinaDNS,
+      // meow 没有 direct-nameserver；为新增直连域名显式使用国内 DNS。
+      '+.ctaiot.com': chinaDNS,
       ...nodeDnsPolicy,
     },
   };
