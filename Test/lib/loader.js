@@ -5,7 +5,7 @@ const path = require('path');
 const vm = require('vm');
 
 /**
- * 覆写脚本本身没有模块导出（是给 mihomo JS 运行时执行的）。
+ * 覆写脚本本身没有模块导出（由客户端 JavaScript 覆写运行时执行）。
  * 这里在 vm 沙箱中执行脚本，并在末尾追加一条导出语句，
  * 从而把 main 及其内部函数、配置对象暴露给测试使用。
  * 注意：整个过程不改动磁盘上的原脚本。
@@ -17,7 +17,6 @@ const EXPORT_SUFFIX = `
   matchDomainPattern,
   applyHostsToProxies,
   stripDnsSuffix,
-  ...(typeof simplifyDomainPolicy === 'function' ? { simplifyDomainPolicy } : {}),
   getMatchedRegions,
   toMatchableName,
   normalizeProxyName,
@@ -27,14 +26,11 @@ const EXPORT_SUFFIX = `
   proxyServerDNS,
   ruleOptionsEnable
 };
-// 仅全量版存在 buildCustomizeGroups，精简版无此函数时保持导出不报错
-if (typeof buildCustomizeGroups !== 'undefined') {
-  module.exports.buildCustomizeGroups = buildCustomizeGroups;
-}`;
+module.exports.buildCustomizeGroups = buildCustomizeGroups;`;
 
 /**
  * 加载指定覆写脚本，返回其导出的符号。
- * @param {string} scriptPath 相对仓库根目录的脚本路径，如 'Script/Script.js'
+ * @param {string} scriptPath 相对仓库根目录的脚本路径，如 'MeowScript.js'
  * @param {(code: string) => string} [transform] 可选：在沙箱执行前对源码做字符串变换（用于注入自定义节点等静态配置）
  */
 function loadScript(scriptPath, transform) {

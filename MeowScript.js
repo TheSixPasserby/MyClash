@@ -1,15 +1,14 @@
 /**
  * meow 配置覆写脚本（Clash Nyanpasu / meow alpha 适配版）
  * 原作者：AIsouler
- * 适配目标：meow 0.25.0-alpha+801ada1（2026-10-20 核对官方源码）
- * 已同步原脚本：0c7a93a（2026-10-21，极简模式自动选择与 ctaiot.com 直连）。
+ * 适配目标：meow 0.26.1-alpha+33ec533（2026-10-23 核对官方源码）。
+ * 已核对上游：c1de5ac（2026-10-22）；脚本最新变更仍为 0c7a93a（极简自动选择与 ctaiot.com 直连）。
  * 保留原版服务分流、地区/倍率分组、自定义节点及 hosts 处理。
  * meow 暂无节点 ip-version、sticky-sessions、default-selected 等功能，已改用可用配置。
  * TUN 沿用输入配置和客户端设置，不强制启用实验性 global 路由；IPv6 默认关闭。
  * 在 Nyanpasu 中作为 JavaScript 覆写导入；客户端可能在脚本后合并端口、控制器和 TUN 设置。
  * 源仓库：https://github.com/AIsouler/MyClash
- * 脚本链接：https://raw.githubusercontent.com/AIsouler/MyClash/main/Script/mihomoScript.js
- * 友情推荐，非常好用、省电且内存占用低的代理软件：https://github.com/appshubcc/Bettbox
+ * Meow 脚本：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/MeowScript.js
  */
 
 // --- 静态配置区域 ---
@@ -73,7 +72,7 @@ const ruleOptionsEnable = {
   屏蔽国外QUIC: true, // 是否屏蔽国外QUIC流量
 };
 
-// 原规则集的域名快照（2026-10-20）：替代 meow 暂不支持的 Fake-IP rule-set 引用。
+// 原规则集的域名快照（2026-10-23，bett-rules 9e007926）：替代 meow 暂不支持的 Fake-IP rule-set 引用。
 // 分流规则集仍在线更新；这些过滤名单随覆写脚本更新。
 const fakeIpFilterSnapshots = {
   "private": [
@@ -198,6 +197,8 @@ const fakeIpFilterSnapshots = {
     "asusrouter.com",
     "instant.arubanetworks.com",
     "local.adguard.org",
+    "localhost.weixin.qq.com",
+    "localhost.work.weixin.qq.com",
     "miwifi.com",
     "oasisauth.h3c.com",
     "router.asus.com",
@@ -4536,6 +4537,8 @@ const fakeIpFilterSnapshots = {
     "+.sznews.com",
     "+.szpgm.com",
     "+.szse.cn",
+    "+.szu.app",
+    "+.szu.moe",
     "+.szzfgjj.com",
     "+.t00ls.cc",
     "+.t00ls.net",
@@ -6625,7 +6628,7 @@ function buildRegionGroups(filteredProxies, customProxies) {
 /**
  * 处理自定义节点：标准化名称、与订阅节点重名时添加“自建-”前缀、内部去重，
  * 并构建“自建节点”策略组。
- * 自定义节点不参与订阅节点过滤，也不参与 hosts 改写及 DNS 域名处理。
+ * 自定义节点不参与订阅节点过滤及 hosts 改写；主入口单独配置其启动 DNS。
  */
 function buildCustomizeGroups(filteredProxies, customizeList = customizeProxies) {
   if (!customizeList.length) {
@@ -6637,7 +6640,7 @@ function buildCustomizeGroups(filteredProxies, customizeList = customizeProxies)
   const customProxies = [];
 
   for (const proxy of customizeList) {
-    const normalized = normalizeProxyName(proxy);
+    const { 'ip-version': ignored, ...normalized } = normalizeProxyName(proxy);
     let name = normalized.name;
     while (usedNames.has(name)) {
       name = normalizeProxyName({ name: `${customPrefix}${name}` }).name.replace(`${customPrefix} `, customPrefix);
@@ -7197,7 +7200,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     'fake-ip-range': '198.18.0.1/15',
     'store-fake-ip': true, // meow 将持久化选项放在 dns 内
     // meow 的 Fake-IP 过滤只支持域名，不能引用 rule-set。
-    // 国内域名仍通过正常分流规则直连，无需将整个国内规则集展开至此。
+    // 按上游 Fake-IP rule-set 展开对应域名，随脚本更新刷新快照。
     'fake-ip-filter': [...new Set([
       ...fakeIpFilterSnapshots.private,
       ...fakeIpFilterSnapshots.compatibility,

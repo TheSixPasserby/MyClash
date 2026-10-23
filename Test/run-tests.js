@@ -6,6 +6,7 @@ const fx = require('./lib/fixtures');
 const { runUnitTests } = require('./suites/unit');
 const { runIntegrationTests } = require('./suites/integration');
 const { runMeowTests } = require('./suites/meow');
+const { runConfigTests } = require('./suites/config');
 const { runES2020Checks } = require('./lib/es2020-check');
 const { runQuickJSChecks } = require('./lib/quickjs-check');
 const { SCRIPTS, MEOW_SCRIPT } = require('./lib/scripts');
@@ -68,6 +69,12 @@ async function main() {
     const sm = hMeow.summary();
     totalPassed += sm.passed;
     totalFailed += sm.failed;
+
+    const hConfig = new Harness('Meow YAML 配置');
+    runConfigTests(hConfig);
+    const sc = hConfig.summary();
+    totalPassed += sc.passed;
+    totalFailed += sc.failed;
   }
 
   // ES2020 兼容性检查（语法 + 内置 API 静态扫描，未安装 espree 时自动跳过）

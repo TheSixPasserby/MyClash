@@ -4,19 +4,17 @@ on:
   push:
     branches: ['main']
     paths:
-      - 'Script/*'
       - 'MeowScript.js'
+      - 'Config/MeowConfig*.yaml'
       - 'Test/**'
-      - '**/*.yaml'
-      - '**/*.yml'
+      - '.github/workflows/format_and_test.yaml'
       - '.prettierrc*'
   pull_request:
     paths:
-      - 'Script/*'
       - 'MeowScript.js'
+      - 'Config/MeowConfig*.yaml'
       - 'Test/**'
-      - '**/*.yaml'
-      - '**/*.yml'
+      - '.github/workflows/format_and_test.yaml'
       - '.prettierrc*'
   workflow_dispatch:
 
@@ -46,7 +44,7 @@ jobs:
 
       - name: format files
         run: |
-          git ls-files -z '*.js' '*.yml' '*.yaml' | xargs -0 -r prettier --write
+          git ls-files -z -- 'MeowScript.js' 'Config/MeowConfig*.yaml' 'Test/*.js' 'Test/**/*.js' '.github/workflows/*.yaml' '.github/workflows/*.yml' | xargs -0 -r prettier --write
 
       - name: commit and push changes
         run: |
@@ -81,7 +79,7 @@ jobs:
           node-version: '24'
 
       - name: install dependencies
-        run: npm --prefix Test install
+        run: npm --prefix Test ci
 
       - name: run tests
         run: node Test/run-tests.js

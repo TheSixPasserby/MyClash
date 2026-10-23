@@ -7,16 +7,8 @@
  */
 const SCRIPTS = [
   {
-    file: 'Script/Script.js',
-    label: '精简版 Script.js',
-    meta: {
-      full: false,
-      regions: ['香港', '日本', '美国', '新加坡'],
-    },
-  },
-  {
-    file: 'Script/mihomoScript.js',
-    label: '全量版 mihomoScript.js',
+    file: 'MeowScript.js',
+    label: 'Meow 覆写脚本',
     meta: {
       full: true,
       regions: ['香港', '日本', '美国', '新加坡', '台湾'],
@@ -24,10 +16,9 @@ const SCRIPTS = [
   },
 ];
 
-// Meow 使用独立回归套件，避免套用 Mihomo 专属 DNS、直连节点等断言。
 const MEOW_SCRIPT = 'MeowScript.js';
 
-/** 脚本文件路径列表（供兼容性检查模块使用，包含 Meow） */
-const SCRIPT_FILES = [...SCRIPTS.map((s) => s.file), MEOW_SCRIPT];
+/** 脚本文件路径列表（供兼容性检查模块使用） */
+const SCRIPT_FILES = SCRIPTS.map((s) => s.file);
 
 module.exports = { SCRIPTS, MEOW_SCRIPT, SCRIPT_FILES };

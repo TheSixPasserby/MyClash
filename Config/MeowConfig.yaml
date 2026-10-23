@@ -1,12 +1,13 @@
 #  ---------说明---------
 #  meow配置（全量版）
-#  作者：AIsouler
+#  原作者：AIsouler；Meow 适配：TheSixPasserby
 #  原仓库：https://github.com/AIsouler/MyClash
 #  原版配置链接：https://raw.githubusercontent.com/AIsouler/MyClash/main/Config/mihomoConfig.yaml
-#  友情推荐，非常好用、省电且内存占用低的代理软件：https://github.com/appshubcc/Bettbox
+#  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
 #  ---------------------
 
-# meow 适配目标：0.25.0-alpha+801ada1，与根目录 MeowScript.js 使用相同的适配方式。
+# meow 适配目标：0.26.1-alpha+33ec533，与根目录 MeowScript.js 使用相同的适配方式。
+# 上游核对：c1de5ac（2026-10-22）；不输出仅适用于 Mihomo 的配置字段。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
 # meow 暂不支持 age 订阅解密和 additional-prefix：使用普通 Clash YAML 订阅，
@@ -17,7 +18,7 @@
 # 国内 DNS 使用直连 DoT；国外 DNS 使用经“默认代理”的 TCP DNS，出口至 DNS 服务的一段未加密。
 # nameserver-policy 中 private 的 192.168.1.1 是当前局域网 DNS；换网络后按实际内网 DNS 修改。
 # provider 节点域名通过 proxy-server-nameserver 独立解析，避免与代理 DNS 互相依赖。
-# Fake-IP 排除列表是脚本内同一份 2026-10-20 快照，不会跟随远程规则集自动更新。
+# Fake-IP 排除列表是脚本内同一份 2026-10-23 快照（bett-rules 9e007926），不会跟随远程规则集自动更新。
 # default-selected 改为首项；meow 的选择记忆由内核自身管理。
 # 负载均衡改用 consistent-hashing，按目标保持稳定映射；不等同于 sticky-sessions 的会话机制。
 
@@ -27,7 +28,7 @@ proxy_providers_common:
     type: http,
     interval: 86400,
     proxy: DIRECT,
-    exclude-type: 'direct|reject|rematch',
+    exclude-type: 'DIRECT|REJECT|REMATCH',
     health-check: { enable: true, url: https://www.apple.com/library/test/success.html },
   }
 
@@ -202,6 +203,8 @@ dns:
     - 'asusrouter.com'
     - 'instant.arubanetworks.com'
     - 'local.adguard.org'
+    - 'localhost.weixin.qq.com'
+    - 'localhost.work.weixin.qq.com'
     - 'miwifi.com'
     - 'oasisauth.h3c.com'
     - 'router.asus.com'
@@ -4530,6 +4533,8 @@ dns:
     - '+.sznews.com'
     - '+.szpgm.com'
     - '+.szse.cn'
+    - '+.szu.app'
+    - '+.szu.moe'
     - '+.szzfgjj.com'
     - '+.t00ls.cc'
     - '+.t00ls.net'
@@ -6072,7 +6077,6 @@ group_filter:
   exclude_filter:
     &exclude_filter {
       exclude-filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong|🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan|🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore|🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)',
-      exclude-type: 'direct',
     }
 
 # 定义分流策略组
@@ -6272,6 +6276,7 @@ proxy-groups:
   - name: '其他节点'
     <<: [*group_common_select, *exclude_filter]
     include-all: true
+    exclude-type: 'DIRECT'
     proxies: ['其他节点-自动选择']
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/WorldMap.svg'
   - name: '其他节点-自动选择'

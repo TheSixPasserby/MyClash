@@ -1,7 +1,11 @@
 # AGENT.md
 
 面向在本仓库工作的 AI 助手与维护者，记录**图标统一化处理流程**及其配套约定（含踩过的坑）。
-改动 `Icons/`、`Script/`、`Config/` 里的图标相关内容前请先读本文。
+改动 `Icons/`、`MeowScript.js`、`Config/` 里的图标相关内容前请先读本文。
+
+当前只维护 Meow：发布入口为根目录 `MeowScript.js`、`Config/MeowConfig.yaml` 和 `Config/MeowConfigLite.yaml`。下文保留图标处理历史，历史文件名不代表当前维护入口。
+
+上游 `AIsouler/MyClash` 只作为功能比较来源。同步时将适用改动移入 Meow 入口并保留兼容替代，更新相应测试及同步提交记录；不要恢复原内核的发布/测试入口，也不要原样覆盖 Meow 文件。保留上游归属、许可证与既定图标 CDN 前缀。
 
 - **导航**
 
@@ -24,9 +28,9 @@
 | 统一化矢量（对外提供的就是这套） | `Icons/svg/<Name>.svg`                                                                                                                                                                                                                                     |
 | 命名                             | PascalCase、无下划线/连字符；png 与 svg **同名一一对应**（当前 39 对）                                                                                                                                                                                     |
 | 引用格式                         | `https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/<Name>.svg`；**JS 脚本里前缀已提为 `iconBaseUrl`**，写成 `` `${iconBaseUrl}<Name>.svg` ``；YAML 不支持变量，仍写全量                                                                       |
-| 引用位置                         | `Script/mihomoScript.js`（43）、`Script/Script.js`（24）、`Config/mihomoConfig.yaml`（36）、`Config/mihomoConfigLite.yaml`（18）（共 121 处）                                                                                                              |
-| 规则集引用                       | 脚本里已提为 `const ruleSetBaseUrl`（`…/gh/appshubcc/bett-rules@meta/geo/`），写成 `` `${ruleSetBaseUrl}geosite/<name>.mrs` ``；`path-in-bundle` 是包内本地路径，与之无关；少数第三方规则集（Emby / emos / cn-additional）仓库不同，仍写全量 URL |
-| 回归测试                         | `node Test/run-tests.js`（改过脚本必跑，当前 198 项；含 ES2020 语法检查与 QuickJS 实跑 `main()`）                                                                                                                                                          |
+| 引用位置 | `MeowScript.js`、`Config/MeowConfig.yaml`、`Config/MeowConfigLite.yaml` |
+| 规则集引用 | 脚本里使用 `const ruleSetBaseUrl`（`…/gh/appshubcc/bett-rules@meta/geo/`）；第三方规则集（Emby / emos / cn-additional）仍写全量 URL。只使用 Meow 支持的 provider 字段。 |
+| 回归测试 | `node Test/run-tests.js`（改过脚本/配置必跑；Meow 脚本、两份独立配置、ES2020 与 QuickJS 验证） |
 
 ---
 
@@ -812,7 +816,7 @@ Singapore 实测：`C1 (249.4028, 330.6168) R1 132.9217`（rms 0.72）、`C2 (34
 https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/<Name>.svg
 ```
 
-- 改完必须审计：4 个文件里所有 `cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/(svg|png)/...` 的目标文件都存在，且没有残留的第三方图标 CDN（Koolson / MiToverG422 / lige47）。
+- 改完必须审计：当前三个发布文件里所有 `cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/(svg|png)/...` 的目标文件都存在，且没有残留的第三方图标 CDN（Koolson / MiToverG422 / lige47）。
 - jsDelivr 走 `@main` 分支，**commit + push 之后**链接才生效。
 - ⚠️ Windows 下仅大小写不同的改名（`fcm.png` → `Fcm.png`）git 可能不记录 → 必要时 `git rm --cached <旧名>` 再 `git add <新名>`，保证 index 里的文件名与 URL 逐字符一致。
 

@@ -1,88 +1,61 @@
-# MyClash 覆写脚本测试
+# MyClash · Meow 测试
 
-对 `Script/Script.js`（精简版）、`Script/mihomoScript.js`（全量版）及 `MeowScript.js` 的自动化测试。
+测试对象为根目录 `MeowScript.js` 及 `Config/MeowConfig.yaml`、`Config/MeowConfigLite.yaml`。测试不加载或依赖上游原脚本。
 
 ## 运行方式
 
 在仓库根目录执行：
 
 ```bash
+npm --prefix Test ci
 node Test/run-tests.js
 # 或
 npm --prefix Test test
 ```
 
-仅需要 Node.js（推荐 ≥ 16）。
-
-可按需只运行某一部分（参数可组合）：
+可按需筛选部分检查，参数可以组合：
 
 ```bash
-node Test/run-tests.js --node     # 仅 Node 单元+集成测试
-node Test/run-tests.js --es2020   # 仅 ES2020 兼容性检查
-node Test/run-tests.js --quickjs  # 仅 QuickJS 引擎验证
+node Test/run-tests.js --node     # Node 单元、集成、Meow 适配及配置检查
+node Test/run-tests.js --es2020   # MeowScript.js 的 ES2020 兼容性检查
+node Test/run-tests.js --quickjs  # MeowScript.js 的 QuickJS 引擎验证
 ```
 
-### 兼容性验证（可选依赖）
-
-`run-tests.js` 会自动执行两项兼容性验证，分别依赖两个 npm 包，首次使用前安装：
-
-```bash
-npm --prefix Test install
-```
-
-- **ES2020 兼容性检查**：用 `espree` 以 `ecmaVersion: 2020` 解析脚本（任何 ES2021+ 语法都会报错），并静态扫描是否使用了 ES2021+ 的内置 API。
-  单独运行：`npm --prefix Test run test:es2020`（等价于 `node Test/run-tests.js --es2020`）
-- **QuickJS 引擎验证**：用真实 QuickJS 引擎加载脚本并调用 `main()`。
-  单独运行：`npm --prefix Test run test:quickjs`（等价于 `node Test/run-tests.js --quickjs`）
-
-任一依赖未安装时，对应部分会自动跳过（不影响其余测试结果）。
+`espree` 用于 ES2020 语法和内置 API 检查，`quickjs-emscripten` 用于真实 QuickJS 引擎加载及执行 `main()`，`yaml` 用于解析两份配置。完整验证前应先安装锁定的依赖；兼容性检查在依赖缺失时会跳过，不能将跳过等同于检查通过。
 
 ## 覆盖内容
 
-### 单元测试（纯函数）
-
-- `matchDomainPattern`：精确 / `+.` / `.` / `*.` / 中间通配符、大小写
-- `applyHostsToProxies`：hosts 映射改写节点 server（精确/通配/数组取值/优先级/链式映射，回环映射防御性终止）
-- `stripDnsSuffix`：# 策略组后缀处理（#direct 或 #direct&参数 整条保留，direct 后接其他字符仍剥离）
-- `getMatchedRegions`：香港 / 日本 / 美国 / 新加坡 / 台湾（全量版）以及低/高倍率匹配；名称夹零宽/不可见字符时仍能匹配
-- `toMatchableName`：取节点名「可用于匹配」的形式——剥离零宽/不可见字符（含双向控制符、隐形运算符、隔离符、谚文填充符、BOM），保留 ZWJ/ZWNJ 与变体选择符；仅供正则匹配使用，不改动原节点名
-- `normalizeProxyName`：自动补国旗、折叠空格、保持原名
-- `fixDialerProxy`：重命名引用更新、引用目标不存在时移除、未变引用保留
-- `buildCustomizeGroups`：自定义节点标准化、与订阅节点重名加“自建-”前缀、内部去重、构建“自建节点”策略组
-
-### 集成测试（main 覆写）
-
-- 节点过滤（DIRECT/REJECT/rematch/信息节点）、标准化补国旗、dialer-proxy 修复
-- 节点名含零宽字符（`invisibleCharsSubscription`）：地区识别、信息节点过滤、倍率判断均不受影响；且节点名**不被改写**（不可见字符原样保留，只额外补国旗），dialer-proxy 引用照常同步
-- GLOBAL 策略组聚合所有策略组
-- DNS 与 hosts（`default-nameserver` 与 `proxy-server-nameserver` 分别使用固定公共 DNS；私有 DNS 在无节点专属 policy 时合并写入节点域名 policy、有专属 policy 时优先保留、公共 DNS 过滤；节点域名 policy/fake-ip-filter 保留（节点域名仅取映射后的 server 且排除 IP 类型）、包含 `doh.pub` 在内的默认 hosts 映射，以及 hosts 映射改写 server；仅当 `proxy-server-nameserver` 有且仅有一个条目且包含 `listen` 值，或条目含 `127.0.0.1` 且 `listen` 含 `0.0.0.0` 时才触发改写，未命中时跳过改写）
-- 配置选项开关（过滤高倍率 / 自动选择组 / 隐藏手动组 / 分流组添加所有节点 / QUIC 及 cn_additional 规则集 / 关闭分流组）
-- 自定义节点：未配置时不生成自定义节点组；配置后生成“自建节点”组、重名加“自建-”前缀、不参与 hosts 改写与 DNS 域名处理、默认代理/GLOBAL/手动选择包含自定义节点
-- 异常场景（空节点、仅 DIRECT/REJECT/rematch 类型、全部可过滤节点 → 抛错）
+- **公共函数**：域名模式匹配、不可见字符处理、国旗与节点名称、地区和倍率识别、hosts 映射、`dialer-proxy` 引用及自建节点去重。
+- **脚本集成**：节点过滤、动态分组、服务选项、极简模式、全局组、自建节点组合、空订阅和无有效节点等异常。
+- **Meow 适配**：DNS 和节点域名策略、内置 `DIRECT`、国内媒体前置规则、QUIC 子规则、默认候选、组引用和循环，以及不输出已知不兼容配置。
+- **静态配置**：两份 Meow YAML 的语义、分组和规则引用、地区与倍率正则、DNS 及兼容字段，同时保留完整版与精简版的服务差异。
+- **运行引擎**：`MeowScript.js` 的 ES2020 检查，以及 QuickJS 的顶层执行、`main()` 调用和与 Node 结果的结构对照。
 
 ## 文件结构
 
-Meow 使用独立回归套件，覆盖极简模式自动选择和自建节点组合、分组引用与循环、前置直连规则、QUIC 开关，以及 DNS 和国内媒体直连适配。三个脚本均参加 ES2020 与 QuickJS 检查；模拟订阅测试不替代实际内核的启动及联网验证。
-
 ```text
 Test/
-├── package.json            # npm test / test:es2020 / test:quickjs 脚本
-├── run-tests.js            # 唯一入口：Node 测试 + ES2020 检查 + QuickJS 验证（支持 --node/--es2020/--quickjs 筛选）
+├── package.json
+├── package-lock.json
+├── run-tests.js             # 唯一测试入口，支持 --node/--es2020/--quickjs
 ├── README.md
 ├── lib/
-│   ├── loader.js           # vm 沙箱加载脚本并暴露 main / 内部函数 / ruleOptionsEnable
-│   ├── harness.js          # 轻量断言与 ✓/✗ 输出、汇总
-│   ├── fixtures.js         # 模拟订阅配置（典型/精简/空/仅type过滤/全部可过滤/hosts映射/通配映射/链式映射/零宽字符）
-│   ├── scripts.js          # 待测试脚本列表（单一来源，供 run-tests / 两个检查模块共用）
-│   ├── es2020-check.js     # ES2020 兼容性检查逻辑（espree 语法 + 内置 API 静态扫描）
-│   └── quickjs-check.js    # QuickJS 兼容性验证逻辑（语法解析/顶层执行/main 调用）
+│   ├── loader.js            # vm 沙箱加载 MeowScript.js 并暴露内部符号
+│   ├── config-loader.js     # 解析 Meow YAML 配置
+│   ├── harness.js           # 断言输出及汇总
+│   ├── fixtures.js          # 模拟订阅与节点
+│   ├── scripts.js           # Meow 脚本入口的单一来源
+│   ├── es2020-check.js      # ES2020 语法与内置 API 检查
+│   └── quickjs-check.js     # 真实 QuickJS 加载与 main() 验证
 └── suites/
-    ├── unit.js             # 纯函数单元测试
-    ├── integration.js      # Mihomo main() 集成测试
-    └── meow.js             # Meow 适配与极简模式回归测试
+    ├── unit.js              # 公共函数单元测试
+    ├── integration.js       # Meow main() 集成测试
+    ├── meow.js              # Meow 专用适配及极简模式回归
+    └── config.js            # 两份独立配置的兼容及引用检查
 ```
 
 ## 说明
 
-- 通过 `vm` 沙箱执行原脚本并在末尾追加导出语句来获取内部符号，**不会修改 `Script/` 目录下的原文件**。
-- 测试通过修改导出的 `ruleOptionsEnable` 对象来模拟配置项开关，用 `withOptions` 保证用后恢复。
+脚本通过 `vm` 沙箱加载，导出内部函数供测试使用，不修改发布文件。配置选项测试使用 `withOptions` 等辅助方法，在用例结束后恢复选项。
+
+所有订阅、节点及口令使用测试数据，不应把真实订阅或凭据提交到测试目录。模拟订阅与静态检查不替代 meow 内核的实际启动、DNS 查询和联网验证；内核行为变化时，应在隔离端口、关闭 TUN 的环境中补充验证。

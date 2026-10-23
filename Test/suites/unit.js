@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * 纯函数单元测试，两个脚本共用。
+ * Meow 覆写脚本的纯函数单元测试。
  * 覆盖：matchDomainPattern / getMatchedRegions / normalizeProxyName / fixDialerProxy / buildCustomizeGroups
  */
 function runUnitTests(h, api, meta) {
@@ -25,9 +25,7 @@ function runUnitTests(h, api, meta) {
   h.test('JAPAN-02 → 日本', () => h.assert(matched('JAPAN-02').includes('日本')));
   h.test('US-LosAngeles-02 → 美国', () => h.assert(matched('US-LosAngeles-02').includes('美国')));
   h.test('SG 01 | 新加坡 → 新加坡', () => h.assert(matched('SG 01 | 新加坡').includes('新加坡')));
-  h.test('台湾 01 → 台湾（仅全量版）', () => {
-    if (meta.full) h.assert(matched('台湾 01').includes('台湾'));
-  });
+  h.test('台湾 01 → 台湾', () => h.assert(matched('台湾 01').includes('台湾')));
   h.test('日本 0.3x 流量 → 低倍率节点 + 日本', () => {
     const n = matched('日本 0.3x 流量');
     h.assert(n.includes('低倍率节点'));
@@ -202,55 +200,35 @@ function runUnitTests(h, api, meta) {
   h.test('非 direct 开头后缀 → 剥离', () =>
     h.assertEqual(api.stripDnsSuffix('https://dns.example.com/dns-query#proxy'), 'https://dns.example.com/dns-query'),
   );
-  h.test('#direct/直连 后缀 → 规范化为 #DIRECT（忽略大小写、含附加参数）', () => {
+  h.test('UDP/TCP 的 direct/直连 后缀 → 规范化为 #DIRECT', () => {
     for (const url of [
-      'https://dns.example.com/dns-query#direct',
-      'https://dns.example.com/dns-query#DIRECT',
-      'https://dns.example.com/dns-query#direct&ecs=2.2.2.2',
-      'https://dns.example.com/dns-query#直连',
+      'tcp://192.168.1.1:53#direct',
+      'tcp://192.168.1.1:53#DIRECT',
+      'tcp://192.168.1.1:53#direct&ecs=2.2.2.2',
+      'tcp://192.168.1.1:53#直连',
     ]) {
-      h.assertEqual(api.stripDnsSuffix(url), 'https://dns.example.com/dns-query#DIRECT');
+      h.assertEqual(api.stripDnsSuffix(url), 'tcp://192.168.1.1:53#DIRECT');
     }
   });
   h.test('包含 direct 的后缀 → 规范化为 #DIRECT', () =>
     h.assertEqual(
-      api.stripDnsSuffix('https://dns.example.com/dns-query#directxxx'),
-      'https://dns.example.com/dns-query#DIRECT',
+      api.stripDnsSuffix('udp://192.168.1.1:53#directxxx'),
+      'udp://192.168.1.1:53#DIRECT',
     ),
   );
 
-  h.section('单元测试 · simplifyDomainPolicy（节点域名 DNS 策略压缩）');
-  h.test('相同 DNS 的同一后缀子域 → 合并为 +. 后缀规则', () =>
-    h.assertDeep(
-      api.simplifyDomainPolicy({
-        'a.example.com': ['https://dns.example/dns-query'],
-        'b.example.com': ['https://dns.example/dns-query'],
-      }),
-      { '+.example.com': ['https://dns.example/dns-query'] },
-    ),
-  );
-  h.test('DNS 不同或只有一个子域 → 保留精确规则', () =>
-    h.assertDeep(
-      api.simplifyDomainPolicy({
-        'a.example.com': 'https://dns-a.example/dns-query',
-        'b.example.com': 'https://dns-b.example/dns-query',
-        'only.other.com': 'https://dns.example/dns-query',
-      }),
-      {
-        'a.example.com': 'https://dns-a.example/dns-query',
-        'b.example.com': 'https://dns-b.example/dns-query',
-        'only.other.com': 'https://dns.example/dns-query',
-      },
-    ),
-  );
-  h.test('两段域名策略 → 原样保留，不能在压缩时丢失', () =>
-    h.assertDeep(
-      api.simplifyDomainPolicy({
-        'example.com': 'https://dns.example/dns-query',
-      }),
-      { 'example.com': 'https://dns.example/dns-query' },
-    ),
-  );
+  h.test('DoH/DoT 后缀不可误作 SNI → 去除路由标记', () => {
+    for (const prefix of ['https://dns.example.com/dns-query', 'tls://192.168.1.1']) {
+      for (const suffix of ['DIRECT', '直连', '默认代理', 'direct&ecs=2.2.2.2']) {
+        h.assertEqual(api.stripDnsSuffix(`${prefix}#${suffix}`), prefix);
+      }
+    }
+  });
+  h.test('system 占位解析为实际内网 DNS，地址两端空格被去除', () => {
+    h.assertEqual(api.stripDnsSuffix('system'), '192.168.1.1');
+    h.assertEqual(api.stripDnsSuffix(' system:// '), '192.168.1.1');
+    h.assertEqual(api.stripDnsSuffix(' tcp://192.168.1.2:53 '), 'tcp://192.168.1.2:53');
+  });
 
   h.section('单元测试 · isIpAddress（IP 地址识别）');
   h.test('IPv4 → true', () => {

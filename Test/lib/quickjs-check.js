@@ -1,5 +1,5 @@
 /**
- * 用真实 QuickJS 引擎验证 Script/Script.js 与 Script/mihomoScript.js 的兼容性。
+ * 用真实 QuickJS 引擎验证 MeowScript.js 的兼容性。
  *
  * 覆盖两层验证：
  * 1. 语法解析 + 顶层执行（含所有正则字面量编译）

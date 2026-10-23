@@ -1,132 +1,79 @@
-# MyClash
+# MyClash · Meow
 
-基于 [Mihomo](https://github.com/MetaCubeX/mihomo/tree/Alpha) 的**覆写脚本与配置文件**，仅适用于 mihomo 内核的代理客户端
+面向 [meow](https://github.com/meow-rs/meow-rs) 内核的 JavaScript 覆写脚本与配置文件，主要用于 Clash Nyanpasu。本仓库基于 [AIsouler/MyClash](https://github.com/AIsouler/MyClash) 适配，现只维护 Meow 版本。
 
-> [!IMPORTANT]
->
-> ⚠️ 使用脚本或配置时，请关闭代理软件的 DNS 覆写功能，以确保功能正常
+## 选择入口
 
-## 特色功能
+| 文件 | 用途 |
+| --- | --- |
+| [MeowScript.js](MeowScript.js) | 覆写机场配置，动态整理节点、生成地区和服务分流组 |
+| [MeowConfig.yaml](Config/MeowConfig.yaml) | 独立配置，全量服务分流，使用 `proxy-providers` 加载订阅 |
+| [MeowConfigLite.yaml](Config/MeowConfigLite.yaml) | 独立配置，保留常用服务分流，使用 `proxy-providers` 加载订阅 |
 
-- 🧩 **丰富的分流策略组**：内置 AI、YouTube、Google、Telegram、Steam、Netflix、Spotify 等常用分流组，可按需启用
-- 🎨 **精美图标**：策略组采用精心绘制的 SVG 图标，支持无损缩放与高清渲染，任意尺寸下均保持清晰
-- 🌏 **地区节点自动分组**：自动识别香港、日本、美国、新加坡、台湾等地区，并生成对应策略组
-- 🧹 **节点智能整理**：自动补国旗、优化节点名称、过滤无效节点，并按倍率自动分类
-- ✨ **精准国内外分流**：区别于常见的 `cn-domain,直连` 分流方案，本仓库采用优化后的 `cn-ip,直连` 作为兜底规则，结合 `cn-domain` 国内 DNS 分流，减少国内流量误走代理、国外流量误判直连的情况，让分流更精准
-- 🪶 **轻量规则方案**：采用 `rule-set` 按需加载规则，减少配置体积与内存占用
-- 🛡️ **无 DNS 泄露**：DNS 配置与路由规则配套设计，解决 DNS 泄露问题
-- 🔧 **私有 DNS 自动处理**：自动处理机场私有 DNS 与节点域名 hosts 映射，无需手动修改
-- 🪜 **高级代理功能**：支持自定义节点、IPv4 / IPv6 优先及国外 QUIC 屏蔽
-- 📱 **适配 [Bettbox](https://github.com/appshubcc/Bettbox) 图形化配置**：可直接在图形界面中开关策略组和功能选项，无需手动修改代码
-
-## 版本选择
-
-提供**全量版**和**精简版**，两者功能基本一致，仅分流策略组数量不同：
-
-- **全量版**：包含完整的分流策略组，适合需要精细分流的用户
-- **精简版**：仅保留常用分流策略组，配置更加简洁
-
----
+脚本只提供一个维护入口，可在 `ruleOptionsEnable` 中开关服务组、地区自动选择、倍率分组、极简模式和国外 QUIC 屏蔽。静态配置保留全量版与精简版的分流差异。
 
 ## 覆写脚本
 
-> [!IMPORTANT]
->
-> - 脚本仅用于覆写机场提供的配置文件，请勿用于覆写自行编写的配置
-> - 脚本已处理部分机场私有 DNS 和节点域名 hosts 映射导致的解析问题，请关闭代理软件的 DNS 覆写功能
-> - 在 Windows 上如需解决 DNS 泄露，需关闭系统“智能多宿主名称解析”，或在代理软件中开启 [严格路由](https://wiki.metacubex.one/config/inbound/tun/#strict-route)
-
-### DNS 处理（核心特色功能）
-
-越来越多的机场开始使用私有 DNS 解析节点域名，普通公共 DNS 无法正确解析，更有甚者通过 hosts 映射节点域名，再通过本地监听回环到 DNS 解析，普通覆写手段根本无法处理，本项目脚本针对以上情况做了完善的处理，避免覆写后节点无法解析或被解析到垃圾线路（也就是常说的内鬼组），如果遇到解析问题请反馈
-
-### 可配置功能
-
-使用 **[Bettbox](https://github.com/appshubcc/Bettbox)** 时，可以直接通过图形界面管理这些选项
-
-| 分类     | 功能                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| 策略组   | 内置多个分流策略组，每个都可单独开关，根据节点自动生成地区策略组，可选择地区自动选择、手动选择及高 / 低倍率组 |
-| 节点处理 | 过滤高倍率、低倍率及非地区节点，可统一设置 IPv4 / IPv6 优先                                                   |
-| 分流     | 可将全部节点加入分流策略组，也可启用极简模式                                                                  |
-| 网络     | 可选屏蔽国外 QUIC 流量                                                                                        |
-| 高级     | 支持自定义节点                                                                                                |
-| 兼容     | 自动处理节点 hosts 映射及机场私有 DNS                                                                         |
-
-### 使用方法（脚本）
-
-选择对应版本，将链接或完整代码按如图所示步骤导入支持脚本覆写的客户端即可
-
-- **全量版**
-
-[mihomoScript.js](/Script/mihomoScript.js)，复制下面这个链接使用👇👇👇
+在 Nyanpasu 中选用 Meow 内核，再将以下链接或完整代码作为 JavaScript 覆写导入：
 
 ```text
-https://raw.githubusercontent.com/AIsouler/MyClash/main/Script/mihomoScript.js
+https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/MeowScript.js
 ```
 
-- **精简版**
+脚本用于机场提供的、含 `proxies` 节点的配置。它会过滤信息节点、整理名称与国旗、按地区和倍率分组，并处理节点域名的私有 DNS、hosts 映射及 `dialer-proxy` 引用。自建节点可填写在 `customizeProxies` 中。
 
-[Script.js](/Script/Script.js)，复制下面这个链接使用👇👇👇
+使用时关闭客户端额外的 DNS 覆写，使脚本生成的 DNS 与分流策略一同生效。`meowOptions.localDNS` 默认是 `192.168.1.1`；使用前按实际路由器或内网 DNS 修改，换网络后也需要核对。
+
+脚本会拒绝含 `proxy-providers` 的输入。需要直接管理一个或多个订阅提供者时，使用下面的独立配置，不要叠加脚本。
+
+## 独立配置
+
+选择一份配置，将 `proxy-providers.provider1.url` 填为机场提供的普通 Clash YAML 订阅链接，再作为配置导入 Nyanpasu：
 
 ```text
-https://raw.githubusercontent.com/AIsouler/MyClash/main/Script/Script.js
+https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
+https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfigLite.yaml
 ```
 
-|                                                                                   |
-| --------------------------------------------------------------------------------- |
-| ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/import.webp) |
+添加其他订阅时，复制 `provider1`，修改提供者名称、`url` 与缓存 `path`。自定义节点建议使用 `file` 类型的提供者，以参与地区和倍率过滤。
 
----
+两份配置中的地区组是固定的；没有匹配节点的组会连接失败，不会回退直连。节点域名统一通过 `proxy-server-nameserver` 解析；机场如果依赖私有 DNS 或特殊 hosts 映射，需要手动补充。内网域名使用的 `192.168.1.1` 也应改为本机网络实际可用的内网 DNS。
 
-## 配置文件
+## 适配行为
 
-配置文件与覆写脚本的整体效果基本一致，但由于 YAML 是静态配置，无法像脚本那样灵活处理
+当前内核验证基线为 **meow 0.26.1-alpha+33ec533**。Meow 与上游脚本所用内核的配置能力存在差异，当前适配包括：
 
-因此存在以下限制：
+- 国内域名使用直连 DoT，国外 DNS 通过“默认代理”发送 TCP 查询；代理出口到 DNS 服务之间的这一段 TCP 查询未加密。
+- 直连组使用内置 `DIRECT`，国内媒体域名提前直连，避免先按 IP 分流而限制 CDN 候选地址。`tcp-connect-timeout` 限制单个直连地址的等待时间，不提供并发拨号。
+- Fake-IP 排除名单使用域名展开快照。路由规则集仍可在线更新，排除快照随脚本或配置版本更新。
+- 默认关闭 IPv6。脚本沿用输入配置和客户端的 TUN 设置；两份独立配置默认关闭 TUN，可按需在客户端启用，不强制实验性全局路由。
+- 不提供节点级 IPv4 / IPv6 优先选项。负载均衡改用 `consistent-hashing`，默认策略通过候选列表首项实现，QUIC 判断使用子规则。
+- 提供者周期测速由自动选择等策略组承担。Meow 暂无原订阅的 `age-secret-key` 解密和 `additional-prefix` 改名功能；应使用未加密的兼容订阅，并由订阅源或转换器保证不同订阅的节点名唯一。
 
-- 没有自定义配置项
-- 无法根据节点动态生成地区策略组，未匹配到节点的地区会回退到 `REJECT`
-- 使用私有 DNS 或 hosts 节点域名映射的机场，需要手动写入配置
+## 维护与上游同步
 
-### 使用方法（配置）
+2026-10-23 已核对上游 [c1de5acd](https://github.com/AIsouler/MyClash/commit/c1de5acd1dfe7d29eb5af00084e8d93e3b9610c4)（2026-10-22）：JavaScript 脚本自 [0c7a93a](https://github.com/AIsouler/MyClash/commit/0c7a93a) 后没有变化，当前 Meow 脚本已包含该版本的功能更新。
 
-选择对应版本，将链接或完整代码导入 mihomo 客户端即可
+同时同步了上游 YAML 的 `exclude-type` 与锚点修复，并将 Fake-IP 域名快照刷新至规则数据提交 [9e007926](https://github.com/appshubcc/bett-rules/commit/9e0079263d933a23c7b0a7dc1c24b604298648e2)（2026-10-23）。此次新增 `localhost.weixin.qq.com`、`localhost.work.weixin.qq.com`、`+.szu.app`、`+.szu.moe`，没有删除条目。
 
-- **全量版**
+本仓库只保留 Meow 的发布、配置和测试入口。同步时先审查 [上游](https://github.com/AIsouler/MyClash) 差异，再将适用功能移入 `MeowScript.js`，更新相应配置和回归测试，并记录同步的上游提交。
 
-[mihomoConfig.yaml](/Config/mihomoConfig.yaml)，复制下面这个链接使用👇👇👇
+不要用上游原文件直接覆盖 Meow 入口；DNS、直连、正则、分组和 QUIC 等兼容替代需要保留。上游脚本只用于比较，不作为本仓库下载或测试目标。
 
-```text
-https://raw.githubusercontent.com/AIsouler/MyClash/main/Config/mihomoConfig.yaml
+在仓库根目录运行：
+
+```bash
+npm --prefix Test ci
+node Test/run-tests.js
 ```
 
-- **精简版**
+完整测试说明见 [Test/README.md](Test/README.md)。模拟订阅和配置检查不能代替目标内核的实际启动与联网验证。
 
-[mihomoConfigLite.yaml](/Config/mihomoConfigLite.yaml)，复制下面这个链接使用👇👇👇
+## 来源与致谢
 
-```text
-https://raw.githubusercontent.com/AIsouler/MyClash/main/Config/mihomoConfigLite.yaml
-```
+原始脚本、配置及图标来自 [AIsouler/MyClash](https://github.com/AIsouler/MyClash)，原作者为 AIsouler；保留原项目的 [MIT 许可证](LICENSE)。现有图标 CDN 地址按原项目约定保留。
 
----
-
-## 效果预览
-
-推荐使用 [Bettbox](https://github.com/appshubcc/Bettbox) 管理覆写脚本，可通过图形界面调整策略组和配置项
-
-|                                                                                  |                                                                                  |                                                                                  |                                                                                  |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_1.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_2.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_3.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_4.webp) |
-| ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_5.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_6.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_7.webp) | ![img](https://raw.githubusercontent.com/AIsouler/MyClash/main/Image/IMG_8.webp) |
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/chart?repos=aisouler/myclash&type=date&legend=top-left)](https://www.star-history.com/?repos=aisouler%2Fmyclash&type=date&legend=top-left)
-
-## 致谢
-
-感谢以下项目以及所有上游项目：
+感谢原项目及其上游：
 
 - [dahaha-365/YaNet](https://github.com/dahaha-365/YaNet)
 - [YiXuanZX/rules](https://github.com/YiXuanZX/rules)
