@@ -5,7 +5,7 @@
 #  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
 #  ---------------------
 
-# 适用内核：meow 0.26.1-alpha+33ec533。
+# 适用内核：meow 0.26.1-alpha+62525d4。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
 # provider 使用含 proxies 节点列表的明文 YAML 订阅；内核不解密 age 订阅或添加节点名前缀。

@@ -1,7 +1,7 @@
 /**
  * Meow 配置覆写脚本（Clash Nyanpasu）
  * 原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
- * 适用内核：meow 0.26.1-alpha+33ec533。
+ * 适用内核：meow 0.26.1-alpha+62525d4。
  * 功能：服务分流、地区/倍率分组、自定义节点及节点 hosts 处理。
  * 在 Nyanpasu 中作为 JavaScript 覆写导入，输入订阅须包含 proxies 节点列表。
  * 使用 proxy-providers 时请选用 Config/ 下的独立配置，不叠加本脚本。
@@ -6990,30 +6990,23 @@ const foreignDNS = ['tcp://1.1.1.1:53#默认代理', 'tcp://8.8.8.8:53#默认代
 const defaultDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
 const proxyServerDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
 
-/**
- * hosts 匹配优先级：精确 > +. > . > *（同级按出现顺序）
- */
-function hostSpecificity(pattern) {
-  if (pattern.startsWith('+.')) return 2;
-  if (pattern.startsWith('.')) return 1;
-  if (pattern.includes('*')) return 0;
-  return 3;
+// 域名查询统一忽略大小写、首尾空格和末尾的根域点。
+function normalizeDomain(domain) {
+  return typeof domain === 'string' ? domain.trim().toLowerCase().replace(/\.+$/, '') : '';
 }
 
 /**
  * 判断域名规则（精确/通配）是否匹配节点域名集合，忽略大小写
  */
 function matchDomainPattern(pattern, domains) {
-  pattern = pattern.toLowerCase();
+  pattern = normalizeDomain(pattern);
+  const domainList = (typeof domains === 'string' ? [domains] : [...domains]).map(normalizeDomain).filter(Boolean);
+  if (!pattern || domainList.length === 0) return false;
 
   // 精确匹配
   if (!pattern.includes('*') && !pattern.startsWith('+.') && !pattern.startsWith('.')) {
-    return typeof domains === 'string'
-      ? domains.toLowerCase() === pattern
-      : [...domains].some((d) => d.toLowerCase() === pattern);
+    return domainList.includes(pattern);
   }
-
-  const domainList = typeof domains === 'string' ? [domains.toLowerCase()] : [...domains].map((d) => d.toLowerCase());
 
   // +.example.com
   if (pattern.startsWith('+.')) {
@@ -7027,7 +7020,7 @@ function matchDomainPattern(pattern, domains) {
     return domainList.some((domain) => domain !== suffix && domain.endsWith(`.${suffix}`));
   }
 
-  // *.example.com、example.*.com 等
+  // 单个 * 匹配一层；中间的 * 保留上游订阅预处理能力，输出时展开为精确节点策略。
   const patternParts = pattern.split('.');
   return domainList.some((domain) => {
     const domainParts = domain.split('.');
@@ -7039,18 +7032,48 @@ function matchDomainPattern(pattern, domains) {
 }
 
 /**
+ * 从右向左选择最具体的域名路径：具体标签 > 单层 * > 多层后缀。
+ * 精确键优先；其余同级规则保留订阅顺序，避免宽泛的 +. 覆盖更深的域名。
+ */
+function findDomainEntry(entries, domain) {
+  domain = normalizeDomain(domain);
+  if (!domain) return undefined;
+
+  const labelCount = domain.split('.').length;
+  let bestEntry;
+  let bestPriority;
+  for (const entry of entries) {
+    const pattern = normalizeDomain(entry[0]);
+    if (!matchDomainPattern(pattern, domain)) continue;
+
+    const suffix = pattern.startsWith('+.') ? pattern.slice(2) : pattern.startsWith('.') ? pattern.slice(1) : pattern;
+    const parts = suffix.split('.').reverse();
+    const priority = Array.from({ length: labelCount }, (_, index) =>
+      index < parts.length ? (parts[index] === '*' ? 1 : 2) : 0,
+    );
+    priority.push(Number(!pattern.startsWith('+.') && !pattern.startsWith('.') && !pattern.includes('*')));
+
+    if (bestPriority) {
+      const index = priority.findIndex((value, i) => value !== bestPriority[i]);
+      if (index === -1 || priority[index] < bestPriority[index]) continue;
+    }
+    bestEntry = entry;
+    bestPriority = priority;
+  }
+  return bestEntry;
+}
+
+/**
  * 根据订阅 hosts 映射改写节点 server，改写后无需再复制 hosts 进新配置。
  * 支持链式映射（如 a: b、b: c 时节点 a 改写为 c）；
- * 回环映射（a: b、b: a）由内核校验拒绝，此处仅以已访问集合防御性终止
+ * 回环映射（a: b、b: a）以已访问集合防御性终止。
  */
 function applyHostsToProxies(proxies, hosts) {
   if (!hosts || typeof hosts !== 'object') return proxies;
 
-  const hostEntries = Object.entries(hosts)
-    .filter(
-      ([, value]) => (typeof value === 'string' && value.length > 0) || (Array.isArray(value) && value.length > 0),
-    )
-    .sort((a, b) => hostSpecificity(b[0]) - hostSpecificity(a[0]));
+  const hostEntries = Object.entries(hosts).filter(
+    ([, value]) => (typeof value === 'string' && value.length > 0) || (Array.isArray(value) && value.length > 0),
+  );
 
   if (hostEntries.length === 0) return proxies;
 
@@ -7065,15 +7088,15 @@ function applyHostsToProxies(proxies, hosts) {
     if (cached !== undefined) return cached;
 
     const seen = new Set();
-    let current = server.toLowerCase();
+    let current = normalizeDomain(server);
     let result = server;
     while (!seen.has(current)) {
       seen.add(current);
-      const entry = hostEntries.find(([pattern]) => matchDomainPattern(pattern, current));
+      const entry = findDomainEntry(hostEntries, current);
       const target = entry && targetOf(entry[1]);
       if (!target) break;
       result = target;
-      current = target.toLowerCase();
+      current = normalizeDomain(target);
     }
     resolveCache.set(server, result);
     return result;
@@ -7137,8 +7160,8 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
   const proxyDomains = new Set(
     mappedProxies
       .filter((proxy) => typeof proxy.server === 'string')
-      .map((proxy) => proxy.server.toLowerCase())
-      .filter((server) => !isIpAddress(server)),
+      .map((proxy) => normalizeDomain(proxy.server))
+      .filter((server) => server.length > 0 && !isIpAddress(server)),
   );
 
   const privateProxyServerNameservers = shouldRewriteByHosts ? [] : proxyServerNameservers;
@@ -7159,16 +7182,23 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
   ];
 
   const matchedProxyPolicy = {};
-  for (const [domain, dns] of Object.entries({
-    ...originalDnsConfig['nameserver-policy'],
-    ...originalDnsConfig['proxy-server-nameserver-policy'],
-  })) {
-    if (!matchDomainPattern(domain, proxyDomains)) continue;
+  // 先展开普通策略，再展开节点专用策略，保证同一域名仍由节点专用策略覆盖。
+  for (const [key, dns] of [
+    ...Object.entries(originalDnsConfig['nameserver-policy'] || {}),
+    ...Object.entries(originalDnsConfig['proxy-server-nameserver-policy'] || {}),
+  ]) {
+    // 普通 policy 键可用逗号列出多个域名；规则集前缀不在这里展开。
+    if (key.includes(':')) continue;
+    const domains = key
+      .split(',')
+      .map(normalizeDomain)
+      .filter((domain) => domain && matchDomainPattern(domain, proxyDomains));
+    if (domains.length === 0) continue;
 
     const stripedDns = Array.isArray(dns) ? dns.map(stripDnsSuffix).filter((d) => d.length > 0) : stripDnsSuffix(dns);
-    if (Array.isArray(stripedDns) && stripedDns.length === 0) continue;
+    if (stripedDns.length === 0) continue;
 
-    matchedProxyPolicy[domain] = stripedDns;
+    for (const domain of domains) matchedProxyPolicy[domain] = stripedDns;
   }
 
   if (privateDNS.length > 0 && Object.keys(matchedProxyPolicy).length === 0) {
@@ -7179,17 +7209,21 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
 
   // 每个节点域名使用独立的精确 DNS 策略，避免解析节点时再依赖代理本身。
   const nodeDnsPolicy = {};
-  const policies = Object.entries(matchedProxyPolicy)
-    .sort((a, b) => hostSpecificity(b[0]) - hostSpecificity(a[0]) || b[0].length - a[0].length);
+  const policies = Object.entries(matchedProxyPolicy);
   for (const domain of proxyDomains) {
-    const matched = policies.find(([pattern]) => matchDomainPattern(pattern, domain));
+    const matched = findDomainEntry(policies, domain);
     nodeDnsPolicy[domain] = matched ? matched[1] : proxyServerDNS;
   }
 
   const originalFakeIpFilter = originalDnsConfig['fake-ip-filter'] || [];
-  const proxyFakeIpFilter = originalFakeIpFilter.filter((pattern) =>
-    typeof pattern === 'string' && !pattern.includes(':') && matchDomainPattern(pattern, proxyDomains),
-  );
+  const proxyFakeIpFilter = originalFakeIpFilter
+    .filter((pattern) => typeof pattern === 'string')
+    .map(normalizeDomain)
+    .filter((pattern) => {
+      // 中间 * 仅用于订阅预处理；节点已有精确排除，不向内核复制不支持的模式。
+      const suffix = pattern.replace(/^(?:\+\.|\*\.|\.)/, '');
+      return !suffix.includes('*') && !pattern.includes(':') && matchDomainPattern(pattern, proxyDomains);
+    });
 
   const dns = {
     enable: true,
@@ -7267,8 +7301,9 @@ function main(config) {
   // 自建节点也必须能在代理建立之前解析，避免主 DNS 经默认代理形成循环。
   // 不使用订阅的私有 DNS / hosts 改写自建节点。
   for (const proxy of customProxies) {
-    if (typeof proxy.server !== 'string' || isIpAddress(proxy.server)) continue;
-    const domain = proxy.server.toLowerCase();
+    if (typeof proxy.server !== 'string') continue;
+    const domain = normalizeDomain(proxy.server);
+    if (!domain || isIpAddress(domain)) continue;
     if (!Object.prototype.hasOwnProperty.call(dns['nameserver-policy'], domain)) {
       dns['nameserver-policy'][domain] = proxyServerDNS;
     }

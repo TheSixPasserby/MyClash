@@ -2,6 +2,8 @@
 
 用于 [meow](https://github.com/meow-rs/meow-rs) 内核的覆写脚本与配置文件，可在 Clash Nyanpasu 中使用。
 
+当前核对版本为 `meow 0.26.1-alpha+62525d4`，包含域名匹配语义修复；使用对应提交或更新的 alpha 内核。
+
 ## 选择入口
 
 | 文件 | 用途 |
@@ -58,6 +60,7 @@ https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfigL
 - 默认关闭 IPv6；脚本沿用输入配置的 TUN 设置，独立配置默认关闭 TUN，可在客户端按需启用。
 - 负载均衡使用 `consistent-hashing`；策略组初次选择采用候选列表首项，后续选择由内核记忆。
 - 周期测速由自动选择、负载均衡策略组执行。
+- 订阅的节点 hosts 与 DNS 规则按最具体的域名选择，并忽略大小写、首尾空格和末尾的根域点；DNS 的逗号分隔域名键会分别处理。节点解析仍展开为精确策略，避免依赖代理本身。
 
 ## 来源与许可
 
