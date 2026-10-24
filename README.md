@@ -6,11 +6,11 @@
 
 ## 选择入口
 
-| 文件 | 用途 |
-| --- | --- |
-| [MeowScript.js](MeowScript.js) | 覆写机场配置，自动整理节点并生成地区、倍率和服务分流组 |
-| [MeowConfig.yaml](Config/MeowConfig.yaml) | 使用订阅提供者的独立配置，全量分流 |
-| [MeowConfigLite.yaml](Config/MeowConfigLite.yaml) | 使用订阅提供者的独立配置，常用服务分流 |
+| 文件                                              | 用途                                                   |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| [MeowScript.js](MeowScript.js)                    | 覆写机场配置，自动整理节点并生成地区、倍率和服务分流组 |
+| [MeowConfig.yaml](Config/MeowConfig.yaml)         | 使用订阅提供者的独立配置，全量分流                     |
+| [MeowConfigLite.yaml](Config/MeowConfigLite.yaml) | 使用订阅提供者的独立配置，常用服务分流                 |
 
 脚本与独立配置选择一种使用。
 
@@ -26,12 +26,12 @@ https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/MeowScript.js
 
 在 `ruleOptionsEnable` 中开关服务组、自动选择、倍率分组、极简模式和国外 QUIC 屏蔽。在 `meowOptions` 中设置：
 
-| 选项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `localDNS` | `['192.168.1.1']` | 内网域名使用的 DNS，按当前路由器或局域网修改 |
-| `ipv6` | `false` | 是否启用 IPv6 |
-| `tunAutoRoute` | `null` | 沿用输入配置与客户端设置；可手动指定路由方式 |
-| `directConnectTimeout` | `2` | 单个直连地址的连接超时，单位为秒 |
+| 选项                   | 默认值            | 说明                                         |
+| ---------------------- | ----------------- | -------------------------------------------- |
+| `localDNS`             | `['192.168.1.1']` | 内网域名使用的 DNS，按当前路由器或局域网修改 |
+| `ipv6`                 | `false`           | 是否启用 IPv6                                |
+| `tunAutoRoute`         | `null`            | 沿用输入配置与客户端设置；可手动指定路由方式 |
+| `directConnectTimeout` | `2`               | 单个直连地址的连接超时，单位为秒             |
 
 关闭客户端额外的 DNS 覆写，使生成的 DNS 与分流策略一同生效。更换网络后，重新核对 `localDNS`。
 

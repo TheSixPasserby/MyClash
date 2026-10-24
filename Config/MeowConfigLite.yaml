@@ -5762,7 +5762,8 @@ tun:
 
 # Rule Provider 通用配置
 rule_providers_common:
-  rule_providers_domain: &rule_providers_domain { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: domain }
+  rule_providers_domain:
+    &rule_providers_domain { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: domain }
   rule_providers_ip: &rule_providers_ip { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: ipcidr }
 
 # 定义 Rule Providers
@@ -5861,10 +5862,7 @@ rule-providers:
 # 策略组通用配置
 # 无匹配节点的 provider 组会连接失败，不会回退直连。
 group_common:
-  group_common_select:
-    &group_common_select {
-      type: select,
-    }
+  group_common_select: &group_common_select { type: select }
 
   group_common_auto:
     &group_common_auto {
@@ -5967,7 +5965,20 @@ proxy-groups:
 
   - name: 'AI'
     <<: [*group_common_select, *proxies_default]
-    proxies: ['美国', '默认代理', '手动选择', '自动选择', '香港', '日本', '新加坡', '台湾', '低倍率节点', '高倍率节点', '其他节点']
+    proxies:
+      [
+        '美国',
+        '默认代理',
+        '手动选择',
+        '自动选择',
+        '香港',
+        '日本',
+        '新加坡',
+        '台湾',
+        '低倍率节点',
+        '高倍率节点',
+        '其他节点',
+      ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/OpenAI.svg'
 
   - name: 'Telegram'
