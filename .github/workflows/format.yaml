@@ -1,0 +1,62 @@
+name: Meow
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'MeowScript.js'
+      - 'Config/MeowConfig*.yaml'
+      - 'README.md'
+      - 'AGENT.md'
+      - '.github/workflows/format.yaml'
+      - '.prettierrc*'
+  pull_request:
+    paths:
+      - 'MeowScript.js'
+      - 'Config/MeowConfig*.yaml'
+      - 'README.md'
+      - 'AGENT.md'
+      - '.github/workflows/format.yaml'
+      - '.prettierrc*'
+  workflow_dispatch:
+
+concurrency:
+  group: meow-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Check script syntax
+        run: node --check MeowScript.js
+
+  format:
+    if: github.event_name != 'pull_request'
+    needs: syntax
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install formatter
+        run: npm install -g prettier
+      - name: Format Meow files
+        run: |
+          git ls-files -z -- 'MeowScript.js' 'Config/MeowConfig*.yaml' 'README.md' 'AGENT.md' '.github/workflows/*.yaml' | xargs -0 -r prettier --write
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- MeowScript.js Config/MeowConfig*.yaml README.md AGENT.md .github/workflows/
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: format Meow files"
+            git push
+          fi

@@ -1,26 +1,24 @@
 #  ---------说明---------
-#  meow配置（全量版）
-#  原作者：AIsouler；Meow 适配：TheSixPasserby
-#  原仓库：https://github.com/AIsouler/MyClash
-#  原版配置链接：https://raw.githubusercontent.com/AIsouler/MyClash/main/Config/mihomoConfig.yaml
+#  Meow 配置（全量版）
+#  原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
+#  基础来源：https://github.com/AIsouler/MyClash
 #  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
 #  ---------------------
 
-# meow 适配目标：0.26.1-alpha+33ec533，与根目录 MeowScript.js 使用相同的适配方式。
-# 上游核对：c1de5ac（2026-10-22）；不输出仅适用于 Mihomo 的配置字段。
+# 适用内核：meow 0.26.1-alpha+33ec533。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
-# meow 暂不支持 age 订阅解密和 additional-prefix：使用普通 Clash YAML 订阅，
-# 多个订阅的节点名称需在订阅源/转换器中确保唯一；这些功能无法仅用配置等效实现。
-# 默认关闭 IPv6、TUN；使用系统代理。TUN 由 Nyanpasu 按需启用，不强制实验性全局路由。
-# tcp-connect-timeout 使内置 DIRECT 在单个 IP 超时后尝试下一地址，不等同于 tcp-concurrent。
-# 直连组使用内置 DIRECT；meow 暂无 Mihomo 的五种节点 ip-version 选项。
+# provider 使用含 proxies 节点列表的明文 YAML 订阅；内核不解密 age 订阅或添加节点名前缀。
+# 多个订阅的节点名称需在订阅源或转换器中确保唯一。
+# IPv6、TUN 默认关闭，适合系统代理；需要 TUN 时在 Nyanpasu 中启用并设置路由。
+# tcp-connect-timeout 为内置 DIRECT 的每个候选 IP 设置 2 秒连接超时，超时后顺序尝试下一地址。
+# 直连组使用内置 DIRECT，并遵循全局 IPv6 设置。
 # 国内 DNS 使用直连 DoT；国外 DNS 使用经“默认代理”的 TCP DNS，出口至 DNS 服务的一段未加密。
 # nameserver-policy 中 private 的 192.168.1.1 是当前局域网 DNS；换网络后按实际内网 DNS 修改。
 # provider 节点域名通过 proxy-server-nameserver 独立解析，避免与代理 DNS 互相依赖。
-# Fake-IP 排除列表是脚本内同一份 2026-10-23 快照（bett-rules 9e007926），不会跟随远程规则集自动更新。
-# default-selected 改为首项；meow 的选择记忆由内核自身管理。
-# 负载均衡改用 consistent-hashing，按目标保持稳定映射；不等同于 sticky-sessions 的会话机制。
+# Fake-IP 排除列表使用 2026-10-23 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
+# 策略组首项作为初始选择；已保存的选择由内核管理。
+# 负载均衡使用 consistent-hashing，按目标保持稳定映射。
 
 # --- 锚点定义 (通用属性) ---
 proxy_providers_common:
@@ -80,7 +78,7 @@ dns:
   use-hosts: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/15
-  # meow 的 fake-ip-filter 不支持 rule-set 引用，以下为对应规则集的域名展开快照。
+  # Fake-IP 排除列表使用域名快照；这里不接受 rule-set 引用。
   fake-ip-filter:
     - '+.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa'
     - '+.10.in-addr.arpa'
@@ -5751,17 +5749,17 @@ dns:
     'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT']
     'rule-set:cn': *chinaDNS
     'rule-set:geolocation-cn': *chinaDNS
-    '+.ctaiot.com': *chinaDNS # meow 无 direct-nameserver，新增直连域名显式走国内 DNS
+    '+.ctaiot.com': *chinaDNS # 此直连域名显式使用国内 DNS
 
 hosts:
   'doh.pub': ['1.12.12.12', '120.53.53.53']
   'cloudflare-dns.com': ['1.1.1.1', '1.0.0.1']
   'dns.google': ['8.8.8.8', '8.8.4.4']
 
-  # 解决谷歌商店无法下载的问题
+  # 谷歌商店下载域名映射
   'services.googleapis.cn': 'services.googleapis.com'
 
-  # 屏蔽哔哩哔哩PCDN，解决访问视频卡顿/直播问题
+  # 屏蔽哔哩哔哩 PCDN 域名
   '+.mcdn.bilivideo.com': ['0.0.0.0']
   '+.mcdn.bilivideo.cn': ['0.0.0.0']
   '+.edge.mountaintoys.cn': ['0.0.0.0']
@@ -5978,7 +5976,7 @@ rule-providers:
 # --- 策略组 (Proxy Groups) ---
 
 # 策略组通用配置
-# meow 无 empty-fallback；无匹配节点的 provider 组会连接失败，不会回退直连。
+# 无匹配节点的 provider 组会连接失败，不会回退直连。
 group_common:
   group_common_select:
     &group_common_select {
@@ -6055,8 +6053,8 @@ proxies_common:
   proxies_reject: &proxies_reject { proxies: ['REJECT', 'REJECT-DROP', 'PASS'] }
 
 # 地区过滤器正则表达式定义
-# Rust 正则不支持环视：地区/数值边界改用显式边界；YAML 单引号中反斜杠只写一次。
-# 低倍率各分支分别保留原排除条件；下载分支用无环视状态表达式排除“客户端/软件”。
+# 分组过滤使用 Rust 正则和显式边界，不使用环视；YAML 单引号中反斜杠只写一次。
+# 低倍率按数值、免费/低倍、下载等名称匹配；下载分支排除“客户端/软件”。
 group_filter:
   HK_filter: &HK_filter { filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong)' }
   JP_filter: &JP_filter { filter: '(?i)(🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan)' }
@@ -6285,7 +6283,7 @@ proxy-groups:
 # --- 路由规则 (Rules) ---
 
 rules:
-  # 规则集下载域名，避免出现鸡蛋问题
+  # 规则集下载域名直连，避免下载依赖尚未可用的代理
   - DOMAIN,cdn.jsdmirror.com,直连
 
   # 私有网络直连
@@ -6370,7 +6368,7 @@ rules:
   - RULE-SET,private_ip,直连
   - MATCH,漏网之鱼
 
-# meow 逻辑规则不能内嵌 RULE-SET；PASS 返回主规则链继续分流。
+# QUIC 子规则用 PASS 返回主规则链继续分流；未获放行的 UDP 443 流量拒绝。
 sub-rules:
   meow-quic:
     - NOT,((AND,((NETWORK,UDP),(DST-PORT,443)))),PASS

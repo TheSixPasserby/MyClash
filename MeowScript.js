@@ -1,19 +1,19 @@
 /**
- * meow 配置覆写脚本（Clash Nyanpasu / meow alpha 适配版）
- * 原作者：AIsouler
- * 适配目标：meow 0.26.1-alpha+33ec533（2026-10-23 核对官方源码）。
- * 已核对上游：c1de5ac（2026-10-22）；脚本最新变更仍为 0c7a93a（极简自动选择与 ctaiot.com 直连）。
- * 保留原版服务分流、地区/倍率分组、自定义节点及 hosts 处理。
- * meow 暂无节点 ip-version、sticky-sessions、default-selected 等功能，已改用可用配置。
- * TUN 沿用输入配置和客户端设置，不强制启用实验性 global 路由；IPv6 默认关闭。
- * 在 Nyanpasu 中作为 JavaScript 覆写导入；客户端可能在脚本后合并端口、控制器和 TUN 设置。
- * 源仓库：https://github.com/AIsouler/MyClash
+ * Meow 配置覆写脚本（Clash Nyanpasu）
+ * 原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
+ * 适用内核：meow 0.26.1-alpha+33ec533。
+ * 功能：服务分流、地区/倍率分组、自定义节点及节点 hosts 处理。
+ * 在 Nyanpasu 中作为 JavaScript 覆写导入，输入订阅须包含 proxies 节点列表。
+ * 使用 proxy-providers 时请选用 Config/ 下的独立配置，不叠加本脚本。
+ * IPv6 默认关闭；TUN 沿用输入配置和客户端设置。
+ * 客户端可能在脚本后合并端口、控制器和 TUN 设置。
+ * 基础来源：https://github.com/AIsouler/MyClash
  * Meow 脚本：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/MeowScript.js
  */
 
 // --- 静态配置区域 ---
 
-// meow 专用选项。保持 IPv4 可避免未完整接管 IPv6 时绕过 TUN。
+// Meow 运行选项：默认使用 IPv4；启用 IPv6 前需确认网络和客户端路由可用。
 const meowOptions = {
   ipv6: false,
   // 取自当前物理网卡的局域网 DNS；换网络后按实际路由器/内网 DNS 修改。
@@ -72,8 +72,8 @@ const ruleOptionsEnable = {
   屏蔽国外QUIC: true, // 是否屏蔽国外QUIC流量
 };
 
-// 原规则集的域名快照（2026-10-23，bett-rules 9e007926）：替代 meow 暂不支持的 Fake-IP rule-set 引用。
-// 分流规则集仍在线更新；这些过滤名单随覆写脚本更新。
+// Fake-IP 排除域名快照（2026-10-23，来源 bett-rules）。
+// 排除名单随脚本更新；路由使用的远程规则集独立在线更新。
 const fakeIpFilterSnapshots = {
   "private": [
     "+.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa",
@@ -5813,8 +5813,8 @@ const excludeFilter =
   /群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|选择|剩余|公益|发布|DIZTNA|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|过滤|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b/iu;
 
 // 屏蔽国外QUIC
-// meow 的逻辑规则内不能嵌套 RULE-SET。使用子规则块及 PASS 返回主规则链，
-// 保持国内 QUIC 放行后继续原有服务分流，国外 UDP 443 拒绝的语义。
+// 子规则块按域名/IP 规则集放行国内 QUIC；PASS 返回主规则链继续服务分流。
+// 其余 UDP 443 流量由子规则块拒绝。
 const blockForeignQuic = ['SUB-RULE,meow-quic'];
 const meowQuicRules = [
   'NOT,((AND,((NETWORK,UDP),(DST-PORT,443)))),PASS',
@@ -6549,7 +6549,7 @@ function filterAndNormalizeProxies(config) {
     throw new Error('配置文件中未找到任何代理节点，请使用机场提供的配置文件进行覆写');
   }
 
-  // meow 没有逐节点 IP 版本选项，不能保留会误导用户的配置。
+  // 节点统一遵循全局 IPv6 设置，输出时剔除逐节点 ip-version 字段。
   return filteredProxies.map(({ 'ip-version': ignored, ...proxy }) => proxy);
 }
 
@@ -6775,7 +6775,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
           ];
     }
 
-    // meow 不支持 default-selected；将有效默认项移到首位。
+    // 首项作为策略组初始选择；已保存的选择由内核管理。
     if (svc.defaultSelected && groupProxies.includes(svc.defaultSelected)) {
       groupProxies = [svc.defaultSelected, ...groupProxies.filter((name) => name !== svc.defaultSelected)];
     }
@@ -6981,7 +6981,7 @@ const commonDnsRegex = new RegExp(
 );
 
 // 国内外 DNS 定义
-// 与机场正常配置保持一致，使用 IP 形式的加密 DNS，避免本网络 UDP 53 的长延迟。
+// 国内查询使用 IP 形式的 DoT 地址，无需先解析 DNS 服务域名。
 const chinaDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
 // meow 目前只在普通 UDP/TCP DNS 上支持 #代理；DoH/DoT 的 # 后面是 SNI。
 // 使用经代理隧道传输的 TCP DNS，避免错误 SNI 或将国外 DNS 查询改成直连。
@@ -7087,8 +7087,8 @@ function applyHostsToProxies(proxies, hosts) {
 }
 
 /**
- * 剥离 DNS 地址的 # 策略组后缀；
- * 参数包含 direct 或 直连 时，强制改为 #DIRECT
+ * 规范化订阅中的 DNS 地址：UDP/TCP 的 direct 或直连标记统一为 #DIRECT；
+ * 其他路由标记及加密 DNS 后缀剥离，system 占位值使用 localDNS。
  */
 function stripDnsSuffix(dns) {
   const str = String(dns).trim();
@@ -7177,8 +7177,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     }
   }
 
-  // meow 没有 proxy-server-nameserver-policy。改用主解析器的精确域名策略，
-  // 并为每一个节点域名配置直连 DNS，避免解析代理节点时再依赖代理本身。
+  // 每个节点域名使用独立的精确 DNS 策略，避免解析节点时再依赖代理本身。
   const nodeDnsPolicy = {};
   const policies = Object.entries(matchedProxyPolicy)
     .sort((a, b) => hostSpecificity(b[0]) - hostSpecificity(a[0]) || b[0].length - a[0].length);
@@ -7198,9 +7197,8 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     'use-hosts': true,
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/15',
-    'store-fake-ip': true, // meow 将持久化选项放在 dns 内
-    // meow 的 Fake-IP 过滤只支持域名，不能引用 rule-set。
-    // 按上游 Fake-IP rule-set 展开对应域名，随脚本更新刷新快照。
+    'store-fake-ip': true, // 持久化 Fake-IP 映射
+    // 排除列表使用域名快照，并追加实际节点域名；这里不接受 rule-set 引用。
     'fake-ip-filter': [...new Set([
       ...fakeIpFilterSnapshots.private,
       ...fakeIpFilterSnapshots.compatibility,
@@ -7216,7 +7214,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
       'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT'],
       'rule-set:cn': chinaDNS,
       'rule-set:geolocation-cn': chinaDNS,
-      // meow 没有 direct-nameserver；为新增直连域名显式使用国内 DNS。
+      // 此直连域名显式使用国内 DNS。
       '+.ctaiot.com': chinaDNS,
       ...nodeDnsPolicy,
     },
@@ -7243,7 +7241,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
 // --- 主入口 ---
 
 /**
- * 主入口：覆写机场订阅配置，生成 meow alpha 配置
+ * 主入口：覆写机场订阅配置，生成 Meow 配置。
  */
 function main(config) {
   if (config['proxy-providers'] && Object.keys(config['proxy-providers']).length > 0) {
@@ -7289,7 +7287,7 @@ function main(config) {
 
   newConfig['external-controller'] = '127.0.0.1:9090';
 
-  // 不改变机场默认配置和客户端已验证可用的 TUN 启用状态/路由方式。
+  // TUN 启用状态和路由方式按输入配置继承，仅保留内核支持的字段。
   if (config.tun || meowOptions.tunAutoRoute !== null) {
     const tun = {};
     for (const key of ['enable', 'device', 'mtu', 'inet4-address', 'inet6-address',
