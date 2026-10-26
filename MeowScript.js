@@ -1,7 +1,7 @@
 /**
  * Meow 配置覆写脚本（Clash Nyanpasu）
  * 原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
- * 适用内核：meow 0.26.1-alpha+62525d4。
+ * 适用内核：meow 0.26.1-alpha+989a46f 或更新版本。
  * 功能：服务分流、地区/倍率分组、自定义节点及节点 hosts 处理。
  * 在 Nyanpasu 中作为 JavaScript 覆写导入，输入订阅须包含 proxies 节点列表。
  * 使用 proxy-providers 时请选用 Config/ 下的独立配置，不叠加本脚本。
@@ -19,7 +19,7 @@ const meowOptions = {
   // 取自当前物理网卡的局域网 DNS；换网络后按实际路由器/内网 DNS 修改。
   // meow 不认识 system；内网域名不能用公共 DNS 代替。
   localDNS: ['192.168.1.1'],
-  // null 沿用客户端设置；确需实验性全局路由时可手动改为 'global'。
+  // null 沿用客户端设置；true/global 全局接管，'fake-ip' 仅接管 Fake-IP，false 不添加路由。
   tunAutoRoute: null,
   // 每个直连候选 IP 最多等待 2 秒，再尝试下一个；不是并发拨号。
   directConnectTimeout: 2,
@@ -5784,7 +5784,6 @@ const prefixRules = [
   // 国内直连
   'RULE-SET,geolocation-cn,直连',
   'RULE-SET,games_cn,直连', // 已包含 steam 下载域名
-  'RULE-SET,epicgames,直连',
   'RULE-SET,nvidia_cn,直连',
   'RULE-SET,apple_cn,直连',
   'RULE-SET,microsoft_cn,直连',
@@ -5931,11 +5930,6 @@ const baseRuleProviders = {
     ...ruleProviderCommonDomain,
     url: `${ruleSetBaseUrl}geosite/category-games@cn.mrs`,
     path: './ruleset/category-games@cn.mrs',
-  },
-  epicgames: {
-    ...ruleProviderCommonDomain,
-    url: `${ruleSetBaseUrl}geosite/epicgames.mrs`,
-    path: './ruleset/epicgames.mrs',
   },
   nvidia_cn: {
     ...ruleProviderCommonDomain,
@@ -6989,9 +6983,11 @@ const commonDnsRegex = new RegExp(
 // 国内外 DNS 定义
 // 国内查询使用 IP 形式的 DoT 地址，无需先解析 DNS 服务域名。
 const chinaDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
-// meow 目前只在普通 UDP/TCP DNS 上支持 #代理；DoH/DoT 的 # 后面是 SNI。
-// 使用经代理隧道传输的 TCP DNS，避免错误 SNI 或将国外 DNS 查询改成直连。
-const foreignDNS = ['tcp://1.1.1.1:53#默认代理', 'tcp://8.8.8.8:53#默认代理'];
+// 加密 DNS 使用 ?proxy= 指定代理，# 后面仍是 SNI；内核自动复用 DoH 连接。
+const foreignDNS = [
+  'https://cloudflare-dns.com/dns-query?proxy=默认代理',
+  'https://dns.google/dns-query?proxy=默认代理',
+];
 // DNS 服务器本身用 IP 地址，不依赖外部域名引导。
 const defaultDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
 const proxyServerDNS = ['tls://119.29.29.29', 'tls://223.5.5.5'];
@@ -7039,9 +7035,9 @@ function matchDomainPattern(pattern, domains) {
 
 /**
  * 从右向左选择最具体的域名路径：具体标签 > 单层 * > 多层后缀。
- * 精确键优先；其余同级规则保留订阅顺序，避免宽泛的 +. 覆盖更深的域名。
+ * hosts 精确键优先，其余同级规则保留订阅顺序；DNS 同一 trie 槽按后写覆盖。
  */
-function findDomainEntry(entries, domain) {
+function findDomainEntry(entries, domain, overwrite = false) {
   domain = normalizeDomain(domain);
   if (!domain) return undefined;
 
@@ -7057,11 +7053,13 @@ function findDomainEntry(entries, domain) {
     const priority = Array.from({ length: labelCount }, (_, index) =>
       index < parts.length ? (parts[index] === '*' ? 1 : 2) : 0,
     );
-    priority.push(Number(!pattern.startsWith('+.') && !pattern.startsWith('.') && !pattern.includes('*')));
+    priority.push(
+      Number(!overwrite && !pattern.startsWith('+.') && !pattern.startsWith('.') && !pattern.includes('*')),
+    );
 
     if (bestPriority) {
       const index = priority.findIndex((value, i) => value !== bestPriority[i]);
-      if (index === -1 || priority[index] < bestPriority[index]) continue;
+      if ((index === -1 && !overwrite) || (index !== -1 && priority[index] < bestPriority[index])) continue;
     }
     bestEntry = entry;
     bestPriority = priority;
@@ -7117,10 +7115,22 @@ function applyHostsToProxies(proxies, hosts) {
 
 /**
  * 规范化订阅中的 DNS 地址：UDP/TCP 的 direct 或直连标记统一为 #DIRECT；
- * 其他路由标记及加密 DNS 后缀剥离，system 占位值使用 localDNS。
+ * 节点解析剥离 ?proxy= 及其他代理路由标记，避免依赖尚未建立的代理；system 使用 localDNS。
  */
 function stripDnsSuffix(dns) {
-  const str = String(dns).trim();
+  let str = String(dns).trim();
+  if (str.startsWith('https://') || str.startsWith('tls://')) {
+    str = str
+      .split('?')
+      .filter(
+        (section, index) =>
+          index === 0 ||
+          !section
+            .split('&')
+            .some((param) => param.includes('=') && param.split('=')[0].trim().toLowerCase() === 'proxy'),
+      )
+      .join('?');
+  }
   const hashIndex = str.indexOf('#');
   const prefix = (hashIndex === -1 ? str : str.slice(0, hashIndex)).trim();
   if (prefix === 'system' || prefix === 'system://') return meowOptions.localDNS[0];
@@ -7189,38 +7199,37 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     ),
   ];
 
-  const matchedProxyPolicy = {};
-  // 先展开普通策略，再展开节点专用策略，保证同一域名仍由节点专用策略覆盖。
-  for (const [key, dns] of [
-    ...Object.entries(originalDnsConfig['nameserver-policy'] || {}),
-    ...Object.entries(originalDnsConfig['proxy-server-nameserver-policy'] || {}),
-  ]) {
-    // 普通 policy 键可用逗号列出多个域名；规则集前缀不在这里展开。
-    if (key.includes(':')) continue;
-    const domains = key
-      .split(',')
-      .map(normalizeDomain)
-      .filter((domain) => domain && matchDomainPattern(domain, proxyDomains));
-    if (domains.length === 0) continue;
+  // 分别展开普通与节点专用策略；节点专用命中优先，组内同槽后写覆盖。
+  const matchedProxyPolicies = [
+    originalDnsConfig['nameserver-policy'] || {},
+    originalDnsConfig['proxy-server-nameserver-policy'] || {},
+  ].map((policy) => {
+    const matched = {};
+    for (const [key, dns] of Object.entries(policy)) {
+      // 普通 policy 键可用逗号列出多个域名；规则集前缀不在这里展开。
+      if (key.includes(':')) continue;
+      const domains = key
+        .split(',')
+        .map(normalizeDomain)
+        .filter((domain) => domain && matchDomainPattern(domain, proxyDomains));
+      if (domains.length === 0) continue;
 
-    const stripedDns = Array.isArray(dns) ? dns.map(stripDnsSuffix).filter((d) => d.length > 0) : stripDnsSuffix(dns);
-    if (stripedDns.length === 0) continue;
+      const stripedDns = Array.isArray(dns) ? dns.map(stripDnsSuffix).filter((d) => d.length > 0) : stripDnsSuffix(dns);
+      if (stripedDns.length === 0) continue;
 
-    for (const domain of domains) matchedProxyPolicy[domain] = stripedDns;
-  }
-
-  if (privateDNS.length > 0 && Object.keys(matchedProxyPolicy).length === 0) {
-    for (const domain of proxyDomains) {
-      matchedProxyPolicy[domain] = privateDNS;
+      for (const domain of domains) matched[domain] = stripedDns;
     }
-  }
+    return Object.entries(matched);
+  });
+  const defaultProxyDNS =
+    privateDNS.length > 0 && matchedProxyPolicies.every((policy) => policy.length === 0) ? privateDNS : proxyServerDNS;
 
   // 每个节点域名使用独立的精确 DNS 策略，避免解析节点时再依赖代理本身。
   const nodeDnsPolicy = {};
-  const policies = Object.entries(matchedProxyPolicy);
   for (const domain of proxyDomains) {
-    const matched = findDomainEntry(policies, domain);
-    nodeDnsPolicy[domain] = matched ? matched[1] : proxyServerDNS;
+    const matched =
+      findDomainEntry(matchedProxyPolicies[1], domain, true) || findDomainEntry(matchedProxyPolicies[0], domain, true);
+    nodeDnsPolicy[domain] = matched ? matched[1] : defaultProxyDNS;
   }
 
   const originalFakeIpFilter = originalDnsConfig['fake-ip-filter'] || [];
@@ -7254,13 +7263,13 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     'default-nameserver': defaultDNS,
     nameserver: foreignDNS,
     'nameserver-policy': {
+      // 连续域名键组成一个优先匹配块；节点策略必须位于所有 rule-set 之前。
+      '+.ctaiot.com': chinaDNS,
+      ...nodeDnsPolicy,
       'rule-set:private': meowOptions.localDNS,
       'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT'],
       'rule-set:cn': chinaDNS,
       'rule-set:geolocation-cn': chinaDNS,
-      // 此直连域名显式使用国内 DNS。
-      '+.ctaiot.com': chinaDNS,
-      ...nodeDnsPolicy,
     },
   };
 
@@ -7319,6 +7328,12 @@ function main(config) {
     }
     if (!dns['fake-ip-filter'].includes(domain)) dns['fake-ip-filter'].push(domain);
   }
+  // 自建节点同样移入首个域名块，避免被前面的规则集 DNS 策略遮蔽。
+  const dnsPolicies = Object.entries(dns['nameserver-policy']);
+  dns['nameserver-policy'] = {
+    ...Object.fromEntries(dnsPolicies.filter(([key]) => !key.includes(':'))),
+    ...Object.fromEntries(dnsPolicies.filter(([key]) => key.includes(':'))),
+  };
 
   newConfig['dns'] = dns;
   newConfig['hosts'] = hosts;
@@ -7349,7 +7364,8 @@ function main(config) {
       if (config.tun && Object.prototype.hasOwnProperty.call(config.tun, key)) tun[key] = config.tun[key];
     }
     if (meowOptions.tunAutoRoute !== null) tun['auto-route'] = meowOptions.tunAutoRoute;
-    if (meowOptions.ipv6 && tun['auto-route'] === 'global' && !tun['inet6-address']) {
+    const globalRoute = tun['auto-route'] === undefined || tun['auto-route'] === true || tun['auto-route'] === 'global';
+    if (meowOptions.ipv6 && globalRoute && !tun['inet6-address']) {
       tun['inet6-address'] = 'fdfe:dcba:9876::1/126';
     }
     newConfig.tun = tun;

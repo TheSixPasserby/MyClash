@@ -5,7 +5,7 @@
 #  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
 #  ---------------------
 
-# 适用内核：meow 0.26.1-alpha+62525d4。
+# 适用内核：meow 0.26.1-alpha+989a46f 或更新版本。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
 # provider 使用含 proxies 节点列表的明文 YAML 订阅；内核不解密 age 订阅或添加节点名前缀。
@@ -13,7 +13,7 @@
 # IPv6、TUN 默认关闭，适合系统代理；需要 TUN 时在 Nyanpasu 中启用并设置路由。
 # tcp-connect-timeout 为内置 DIRECT 的每个候选 IP 设置 2 秒连接超时，超时后顺序尝试下一地址。
 # 直连组使用内置 DIRECT，并遵循全局 IPv6 设置。
-# 国内 DNS 使用直连 DoT；国外 DNS 使用经“默认代理”的 TCP DNS，出口至 DNS 服务的一段未加密。
+# 国内 DNS 使用直连 DoT；国外 DNS 使用经“默认代理”的 DoH，内核自动复用加密连接。
 # nameserver-policy 中 private 的 192.168.1.1 是当前局域网 DNS；换网络后按实际内网 DNS 修改。
 # provider 节点域名通过 proxy-server-nameserver 独立解析，避免与代理 DNS 互相依赖。
 # Fake-IP 排除列表使用 2026-10-23 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
@@ -67,7 +67,8 @@ external-controller: '127.0.0.1:9090'
 # 国内外 DNS 定义
 dns_common:
   chinaDNS: &chinaDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
-  foreignDNS: &foreignDNS ['tcp://1.1.1.1:53#默认代理', 'tcp://8.8.8.8:53#默认代理']
+  foreignDNS:
+    &foreignDNS ['https://cloudflare-dns.com/dns-query?proxy=默认代理', 'https://dns.google/dns-query?proxy=默认代理']
   defaultDNS: &defaultDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
   proxyServerDNS: &proxyServerDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
 
@@ -5745,11 +5746,12 @@ dns:
   proxy-server-nameserver: *proxyServerDNS
   nameserver: *foreignDNS
   nameserver-policy:
+    # 域名覆盖项放在规则集之前；内核按文档中的匹配块顺序选择 DNS。
+    '+.ctaiot.com': *chinaDNS
     'rule-set:private': ['192.168.1.1']
     'rule-set:douyin': ['180.184.1.1#DIRECT', '180.184.2.2#DIRECT']
     'rule-set:cn': *chinaDNS
     'rule-set:geolocation-cn': *chinaDNS
-    '+.ctaiot.com': *chinaDNS # 此直连域名显式使用国内 DNS
 
 hosts:
   'doh.pub': ['1.12.12.12', '120.53.53.53']
@@ -5765,7 +5767,7 @@ hosts:
   '+.edge.mountaintoys.cn': ['0.0.0.0']
   '+.h2.smtcdns.net': ['0.0.0.0']
 
-# 按需在 Nyanpasu 中启用；布尔 auto-route 沿用内核默认路由方式。
+# 按需在 Nyanpasu 中启用；auto-route: true 全局接管，'fake-ip' 仅接管 Fake-IP。
 tun:
   enable: false
   auto-route: true
@@ -5795,10 +5797,6 @@ rule-providers:
     <<: *rule_providers_domain
     url: 'https://cdn.jsdmirror.com/gh/appshubcc/bett-rules@meta/geo/geosite/category-games@cn.mrs'
     path: './ruleset/category-games@cn.mrs'
-  epicgames:
-    <<: *rule_providers_domain
-    url: 'https://cdn.jsdmirror.com/gh/appshubcc/bett-rules@meta/geo/geosite/epicgames.mrs'
-    path: './ruleset/epicgames.mrs'
   nvidia_cn:
     <<: *rule_providers_domain
     url: 'https://cdn.jsdmirror.com/gh/appshubcc/bett-rules@meta/geo/geosite/nvidia@cn.mrs'
@@ -6402,7 +6400,6 @@ rules:
   # 国内直连
   - RULE-SET,geolocation-cn,直连
   - RULE-SET,games_cn,直连 # 已包含 steam 下载域名
-  - RULE-SET,epicgames,直连
   - RULE-SET,nvidia_cn,直连
   - RULE-SET,apple_cn,直连
   - RULE-SET,microsoft_cn,直连
