@@ -5,7 +5,7 @@
 #  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfig.yaml
 #  ---------------------
 
-# 适用内核：meow 0.26.1-alpha+989a46f 或更新版本。
+# 适用内核：meow 0.27.0 或更新版本。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
 # provider 使用含 proxies 节点列表的明文 YAML 订阅；内核不解密 age 订阅或添加节点名前缀。
@@ -16,7 +16,9 @@
 # 国内 DNS 使用直连 DoT；国外 DNS 使用经“默认代理”的 DoH，内核自动复用加密连接。
 # nameserver-policy 中 private 的 192.168.1.1 是当前局域网 DNS；换网络后按实际内网 DNS 修改。
 # provider 节点域名通过 proxy-server-nameserver 独立解析，避免与代理 DNS 互相依赖。
-# Fake-IP 排除列表使用 2026-10-23 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
+# Fake-IP 排除列表使用 2026-10-28 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
+# Discord 原生语音需全局 TUN（auto-route: true/global）和支持 UDP 的节点；系统 HTTP 代理不接管语音 UDP。
+# 浏览器直接 IP 的 WebRTC 流量无法凭域名精确识别，见 README 的使用说明。
 # 策略组首项作为初始选择；已保存的选择由内核管理。
 # 负载均衡使用 consistent-hashing，按目标保持稳定映射。
 
@@ -727,6 +729,7 @@ dns:
     - '+.9xu.com'
     - '+.a2z.org.cn'
     - '+.a9vg.com'
+    - '+.aaej.cn'
     - '+.aaic.com.cn'
     - '+.aamgame.com'
     - '+.aamgame.mobi'
@@ -1063,6 +1066,7 @@ dns:
     - '+.bibaodao.com'
     - '+.bidchance.com'
     - '+.biddingx.com'
+    - '+.bigdatacq.com'
     - '+.bigmodel.cn'
     - '+.bihu.com'
     - '+.biji.com'
@@ -1101,6 +1105,7 @@ dns:
     - '+.bmac.com.cn'
     - '+.bobbns.com'
     - '+.bobo.com'
+    - '+.bocd.com.cn'
     - '+.boce.com'
     - '+.bochaai.com'
     - '+.boe.com'
@@ -1214,6 +1219,8 @@ dns:
     - '+.cdnetworks.com'
     - '+.cdnmama.com'
     - '+.cdnmg.com'
+    - '+.cdrcb.com'
+    - '+.cdrcbank.com'
     - '+.cdut.top'
     - '+.ce.cn'
     - '+.ceair.com'
@@ -1407,6 +1414,7 @@ dns:
     - '+.ckxx.net'
     - '+.clangcn.com'
     - '+.clawhub-mirror.com'
+    - '+.cldisk.com'
     - '+.cleargrass.com'
     - '+.clewm.net'
     - '+.cli.im'
@@ -1538,13 +1546,17 @@ dns:
     - '+.cqcb.com'
     - '+.cqccn.com'
     - '+.cqctyiptv.cn'
+    - '+.cqdcg.com'
+    - '+.cqge.com.cn'
     - '+.cqhlw.cn'
     - '+.cqliving.com'
     - '+.cqn.com.cn'
     - '+.cqnews.net'
+    - '+.cqsdlys.cn'
     - '+.cqsjb.com'
     - '+.cqtk.com.cn'
     - '+.cqvip.com'
+    - '+.cqyyxc.com'
     - '+.cr-cts.com'
     - '+.cr173.com'
     - '+.cravatar.cn'
@@ -1754,6 +1766,7 @@ dns:
     - '+.dida365.com'
     - '+.didachuxing.com'
     - '+.didapinche.com'
+    - '+.digitalcnzz.com'
     - '+.digitaling.com'
     - '+.diiing.cn'
     - '+.dili360.com'
@@ -1910,6 +1923,7 @@ dns:
     - '+.e0n.cn'
     - '+.eagsen.com'
     - '+.easec.com.cn'
+    - '+.easemob.com'
     - '+.easesale.com'
     - '+.easiu.com'
     - '+.eastday.com'
@@ -2067,6 +2081,7 @@ dns:
     - '+.fhldns.com'
     - '+.fhyx.com'
     - '+.filez.com'
+    - '+.filmorigin.com'
     - '+.fimmu.com'
     - '+.finchina.com'
     - '+.finclip.com'
@@ -2232,7 +2247,6 @@ dns:
     - '+.gdjdxy.com'
     - '+.gdliontech.com'
     - '+.gdrc.com'
-    - '+.gdtimg.com'
     - '+.geekbang.org'
     - '+.geekpark.net'
     - '+.geektool.top'
@@ -2333,6 +2347,7 @@ dns:
     - '+.gowinamc.com'
     - '+.gpall.cn'
     - '+.gpall.net'
+    - '+.gpzshq.cn'
     - '+.gracg.com'
     - '+.greatwallwine.com.cn'
     - '+.gree.cn'
@@ -2679,6 +2694,7 @@ dns:
     - '+.i8tq.com'
     - '+.iachina.cn'
     - '+.iask.com'
+    - '+.ibangbank.com'
     - '+.ibaotu.com'
     - '+.ibcet.org'
     - '+.ibidian.com'
@@ -2787,6 +2803,7 @@ dns:
     - '+.intsig.com'
     - '+.intsig.net'
     - '+.iotronic.tech'
+    - '+.ip.cn'
     - '+.ip138.com'
     - '+.ipanda.cn'
     - '+.ipanda.com'
@@ -2814,6 +2831,8 @@ dns:
     - '+.ishijue.com'
     - '+.ishumei.com'
     - '+.ishuqi.com'
+    - '+.isigning.cn'
+    - '+.isigning.com'
     - '+.istoreos.com'
     - '+.istv.cn'
     - '+.isxtv.com'
@@ -2891,7 +2910,6 @@ dns:
     - '+.jikecdn.com'
     - '+.jikeiot.cloud'
     - '+.jikexueyuan.com'
-    - '+.jikipedia.com'
     - '+.jin10.com'
     - '+.jinantimes.com.cn'
     - '+.jinchutou.com'
@@ -3059,6 +3077,7 @@ dns:
     - '+.kaipuyun.net'
     - '+.kaixin001.com'
     - '+.kajicam.com'
+    - '+.kakaxing.com'
     - '+.kameng98.com'
     - '+.kancloud.cn'
     - '+.kanimg.com'
@@ -3615,8 +3634,6 @@ dns:
     - '+.modelers.cn'
     - '+.modex.com.cn'
     - '+.moedu.com'
-    - '+.moegirl.org'
-    - '+.moegirl.org.cn'
     - '+.moer.cn'
     - '+.mofang.com'
     - '+.mofazhu.com'
@@ -3713,6 +3730,7 @@ dns:
     - '+.nalrer.cn'
     - '+.namiso.com'
     - '+.nanhaicorp.com'
+    - '+.nanocorechip.com'
     - '+.nanyuenews.com'
     - '+.narwal.com'
     - '+.narwaltech.com'
@@ -5163,6 +5181,7 @@ dns:
     - '+.xiaoluyouxuan.com'
     - '+.xiaoluzhidian.com'
     - '+.xiaomaicn.com'
+    - '+.xiaomaigui.com'
     - '+.xiaomengai.com'
     - '+.xiaomimimo.com'
     - '+.xiaomingtaiji.com'
@@ -5248,6 +5267,7 @@ dns:
     - '+.xuexi365.com.cn'
     - '+.xuexi365.net'
     - '+.xuexicha.com'
+    - '+.xuexitong.com'
     - '+.xundupdf.com'
     - '+.xunfei.cn'
     - '+.xunfeixxj.com'
@@ -5702,6 +5722,7 @@ dns:
     - '+.zzzmap.com'
     - 'ai.zhaomi.cn'
     - 'api.blipsandchitz.me'
+    - 'app.moegirl.org.cn'
     - 'ctdsb.clouddiffuse.xyz'
     - 'cueme-api.quark.cn'
     - 'end-api.shallow.ink'
@@ -5725,6 +5746,7 @@ dns:
     - 'p8-juejin.byteimg.com'
     - 'p9-juejin.byteimg.com'
     - 'ss.bjmu.edu.cn'
+    - 'storage.moegirl.org.cn'
     - 'study.163.com'
     - 'time.amazonaws.cn'
     - 'time.izatcloud.net'
@@ -5819,6 +5841,11 @@ rule-providers:
     path: './ruleset/cn_ip.mrs'
 
   # --- 代理规则集 ---
+
+  discord:
+    <<: *rule_providers_domain
+    url: 'https://cdn.jsdmirror.com/gh/appshubcc/bett-rules@meta/geo/geosite/discord.mrs'
+    path: './ruleset/discord.mrs'
 
   googlefcm:
     <<: *rule_providers_domain
@@ -6022,6 +6049,7 @@ proxies_common:
           '台湾',
           '低倍率节点',
           '高倍率节点',
+          '家宽节点',
           '其他节点',
         ],
     }
@@ -6042,6 +6070,7 @@ proxies_common:
           '台湾',
           '低倍率节点',
           '高倍率节点',
+          '家宽节点',
           '其他节点',
         ],
     }
@@ -6068,6 +6097,10 @@ group_filter:
     &high_filter {
       filter: '(?i)(?:[*×✕✖⨯⨉x](?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?)|(?:(?:^|[^\d.])(?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?(?:倍|[*×✕✖⨯⨉x]))',
     }
+  home_filter:
+    &home_filter {
+      filter: '(?i)(家宽|住宅|原生\s*IP|家庭宽带|(?:^|[^A-Za-z0-9_])(?:ISP|RES)(?:$|[^A-Za-z0-9_])|residential)',
+    }
   exclude_filter:
     &exclude_filter {
       exclude-filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong|🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan|🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore|🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)',
@@ -6086,6 +6119,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '手动选择',
         '自动选择',
         '负载均衡',
@@ -6121,6 +6155,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Fcm.svg'
@@ -6148,6 +6183,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/OpenAI.svg'
@@ -6168,6 +6204,10 @@ proxy-groups:
     <<: [*group_common_select, *proxies_default]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Telegram.svg'
 
+  - name: 'Discord'
+    <<: [*group_common_select, *proxies_default]
+    icon: 'https://cdn.jsdmirror.com/gh/TheSixPasserby/MyClash@main/Icons/svg/Discord.svg'
+
   - name: 'Steam'
     <<: [*group_common_select, *proxies_direct]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Steam.svg'
@@ -6187,6 +6227,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/TikTok.svg'
@@ -6234,6 +6275,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Bitcoin.svg'
@@ -6253,6 +6295,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/PayPal.svg'
@@ -6272,6 +6315,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Patreon.svg'
@@ -6292,6 +6336,7 @@ proxy-groups:
         '台湾',
         '低倍率节点',
         '高倍率节点',
+        '家宽节点',
         '其他节点',
       ]
     icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/EHentai.svg'
@@ -6367,6 +6412,14 @@ proxy-groups:
   - name: '高倍率节点-自动选择'
     <<: [*group_common_auto, *high_filter]
 
+  - name: '家宽节点'
+    <<: [*group_common_select, *home_filter]
+    include-all: true
+    proxies: ['家宽节点-自动选择']
+    icon: 'https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/Home.svg'
+  - name: '家宽节点-自动选择'
+    <<: [*group_common_auto, *home_filter]
+
   - name: '其他节点'
     <<: [*group_common_select, *exclude_filter]
     include-all: true
@@ -6406,6 +6459,29 @@ rules:
   - DOMAIN,fsend.cn,直连
   - DOMAIN,international-gfe.download.nvidia.com,直连
   - DOMAIN-SUFFIX,ctaiot.com,直连
+
+  # Discord 更新/API/CDN 及原生客户端语音优先分流，避免 UDP 443 被通用 QUIC 规则拒绝。
+  # IP 直连语音依赖本机进程识别、全局 TUN 与支持 UDP 的代理节点。
+  - RULE-SET,discord,Discord
+  - PROCESS-NAME,Discord.exe,Discord
+  - PROCESS-NAME,DiscordPTB.exe,Discord
+  - PROCESS-NAME,DiscordCanary.exe,Discord
+  - PROCESS-NAME,DiscordDevelopment.exe,Discord
+  - PROCESS-NAME,Discord,Discord
+  - PROCESS-NAME,DiscordPTB,Discord
+  - PROCESS-NAME,DiscordCanary,Discord
+  - PROCESS-NAME,DiscordDevelopment,Discord
+  - PROCESS-NAME,discord-ptb,Discord
+  - PROCESS-NAME,discord-canary,Discord
+  - PROCESS-NAME,discord-development,Discord
+  - PROCESS-NAME,Discord Helper,Discord
+  - PROCESS-NAME,Discord Helper (Renderer),Discord
+  - PROCESS-NAME,Discord PTB Helper,Discord
+  - PROCESS-NAME,Discord PTB Helper (Renderer),Discord
+  - PROCESS-NAME,Discord Canary Helper,Discord
+  - PROCESS-NAME,Discord Canary Helper (Renderer),Discord
+  # 可选：专用浏览器的全部 UDP 也交给 Discord 组；按实际进程名取消注释。
+  # - AND,((NETWORK,UDP),(PROCESS-NAME,firefox.exe)),Discord
 
   # 禁用国外 QUIC 流量
   - SUB-RULE,meow-quic

@@ -1,7 +1,7 @@
 /**
  * Meow 配置覆写脚本（Clash Nyanpasu）
  * 原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
- * 适用内核：meow 0.26.1-alpha+989a46f 或更新版本。
+ * 适用内核：meow 0.27.0 或更新版本。
  * 功能：服务分流、地区/倍率分组、自定义节点及节点 hosts 处理。
  * 在 Nyanpasu 中作为 JavaScript 覆写导入，输入订阅须包含 proxies 节点列表。
  * 使用 proxy-providers 时请选用 Config/ 下的独立配置，不叠加本脚本。
@@ -23,6 +23,9 @@ const meowOptions = {
   tunAutoRoute: null,
   // 每个直连候选 IP 最多等待 2 秒，再尝试下一个；不是并发拨号。
   directConnectTimeout: 2,
+  // 可选：专用于 Discord 的浏览器进程名，如 ['firefox.exe']；其全部 UDP 流量会走 Discord。
+  // 浏览器的直接 IP 语音无法仅凭域名识别；默认留空，避免影响其他网页的实时通信。
+  discordVoiceProcesses: [],
 };
 
 /**
@@ -45,6 +48,7 @@ const ruleOptionsEnable = {
   Microsoft: true, // Microsoft服务
   Apple: true, // Apple服务
   Telegram: true, // Telegram通讯软件
+  Discord: true, // Discord 更新、聊天、附件和语音；语音需全局 TUN 及支持 UDP 的节点
   Steam: true, // Steam游戏平台
   TikTok: true, // TikTok视频平台
   Twitter: true, // Twitter社交平台
@@ -65,6 +69,7 @@ const ruleOptionsEnable = {
   生成地区自动选择组: true, // 是否生成地区自动选择策略组
   隐藏地区手动选择组: false, // 是否隐藏地区手动选择策略组
   生成倍率组: true, // 是否生成低倍率/高倍率策略组
+  生成家宽节点组: true, // 是否生成家宽（住宅/原生 IP）节点策略组
   分流组添加所有节点: false, // 是否为分流策略组添加所有节点
   过滤低倍率节点: false, // 是否过滤低倍率节点
   过滤高倍率节点: false, // 是否过滤高倍率节点
@@ -72,7 +77,7 @@ const ruleOptionsEnable = {
   屏蔽国外QUIC: true, // 是否屏蔽国外QUIC流量
 };
 
-// Fake-IP 排除域名快照（2026-10-23，来源 bett-rules）。
+// Fake-IP 排除域名快照（2026-10-28，来源 bett-rules）。
 // 排除名单随脚本更新；路由使用的远程规则集独立在线更新。
 const fakeIpFilterSnapshots = {
   private: [
@@ -727,6 +732,7 @@ const fakeIpFilterSnapshots = {
     '+.9xu.com',
     '+.a2z.org.cn',
     '+.a9vg.com',
+    '+.aaej.cn',
     '+.aaic.com.cn',
     '+.aamgame.com',
     '+.aamgame.mobi',
@@ -1063,6 +1069,7 @@ const fakeIpFilterSnapshots = {
     '+.bibaodao.com',
     '+.bidchance.com',
     '+.biddingx.com',
+    '+.bigdatacq.com',
     '+.bigmodel.cn',
     '+.bihu.com',
     '+.biji.com',
@@ -1101,6 +1108,7 @@ const fakeIpFilterSnapshots = {
     '+.bmac.com.cn',
     '+.bobbns.com',
     '+.bobo.com',
+    '+.bocd.com.cn',
     '+.boce.com',
     '+.bochaai.com',
     '+.boe.com',
@@ -1214,6 +1222,8 @@ const fakeIpFilterSnapshots = {
     '+.cdnetworks.com',
     '+.cdnmama.com',
     '+.cdnmg.com',
+    '+.cdrcb.com',
+    '+.cdrcbank.com',
     '+.cdut.top',
     '+.ce.cn',
     '+.ceair.com',
@@ -1407,6 +1417,7 @@ const fakeIpFilterSnapshots = {
     '+.ckxx.net',
     '+.clangcn.com',
     '+.clawhub-mirror.com',
+    '+.cldisk.com',
     '+.cleargrass.com',
     '+.clewm.net',
     '+.cli.im',
@@ -1538,13 +1549,17 @@ const fakeIpFilterSnapshots = {
     '+.cqcb.com',
     '+.cqccn.com',
     '+.cqctyiptv.cn',
+    '+.cqdcg.com',
+    '+.cqge.com.cn',
     '+.cqhlw.cn',
     '+.cqliving.com',
     '+.cqn.com.cn',
     '+.cqnews.net',
+    '+.cqsdlys.cn',
     '+.cqsjb.com',
     '+.cqtk.com.cn',
     '+.cqvip.com',
+    '+.cqyyxc.com',
     '+.cr-cts.com',
     '+.cr173.com',
     '+.cravatar.cn',
@@ -1754,6 +1769,7 @@ const fakeIpFilterSnapshots = {
     '+.dida365.com',
     '+.didachuxing.com',
     '+.didapinche.com',
+    '+.digitalcnzz.com',
     '+.digitaling.com',
     '+.diiing.cn',
     '+.dili360.com',
@@ -1910,6 +1926,7 @@ const fakeIpFilterSnapshots = {
     '+.e0n.cn',
     '+.eagsen.com',
     '+.easec.com.cn',
+    '+.easemob.com',
     '+.easesale.com',
     '+.easiu.com',
     '+.eastday.com',
@@ -2067,6 +2084,7 @@ const fakeIpFilterSnapshots = {
     '+.fhldns.com',
     '+.fhyx.com',
     '+.filez.com',
+    '+.filmorigin.com',
     '+.fimmu.com',
     '+.finchina.com',
     '+.finclip.com',
@@ -2234,7 +2252,6 @@ const fakeIpFilterSnapshots = {
     '+.gdjdxy.com',
     '+.gdliontech.com',
     '+.gdrc.com',
-    '+.gdtimg.com',
     '+.geekbang.org',
     '+.geekpark.net',
     '+.geektool.top',
@@ -2335,6 +2352,7 @@ const fakeIpFilterSnapshots = {
     '+.gowinamc.com',
     '+.gpall.cn',
     '+.gpall.net',
+    '+.gpzshq.cn',
     '+.gracg.com',
     '+.greatwallwine.com.cn',
     '+.gree.cn',
@@ -2681,6 +2699,7 @@ const fakeIpFilterSnapshots = {
     '+.i8tq.com',
     '+.iachina.cn',
     '+.iask.com',
+    '+.ibangbank.com',
     '+.ibaotu.com',
     '+.ibcet.org',
     '+.ibidian.com',
@@ -2789,6 +2808,7 @@ const fakeIpFilterSnapshots = {
     '+.intsig.com',
     '+.intsig.net',
     '+.iotronic.tech',
+    '+.ip.cn',
     '+.ip138.com',
     '+.ipanda.cn',
     '+.ipanda.com',
@@ -2816,6 +2836,8 @@ const fakeIpFilterSnapshots = {
     '+.ishijue.com',
     '+.ishumei.com',
     '+.ishuqi.com',
+    '+.isigning.cn',
+    '+.isigning.com',
     '+.istoreos.com',
     '+.istv.cn',
     '+.isxtv.com',
@@ -2893,7 +2915,6 @@ const fakeIpFilterSnapshots = {
     '+.jikecdn.com',
     '+.jikeiot.cloud',
     '+.jikexueyuan.com',
-    '+.jikipedia.com',
     '+.jin10.com',
     '+.jinantimes.com.cn',
     '+.jinchutou.com',
@@ -3061,6 +3082,7 @@ const fakeIpFilterSnapshots = {
     '+.kaipuyun.net',
     '+.kaixin001.com',
     '+.kajicam.com',
+    '+.kakaxing.com',
     '+.kameng98.com',
     '+.kancloud.cn',
     '+.kanimg.com',
@@ -3617,8 +3639,6 @@ const fakeIpFilterSnapshots = {
     '+.modelers.cn',
     '+.modex.com.cn',
     '+.moedu.com',
-    '+.moegirl.org',
-    '+.moegirl.org.cn',
     '+.moer.cn',
     '+.mofang.com',
     '+.mofazhu.com',
@@ -3715,6 +3735,7 @@ const fakeIpFilterSnapshots = {
     '+.nalrer.cn',
     '+.namiso.com',
     '+.nanhaicorp.com',
+    '+.nanocorechip.com',
     '+.nanyuenews.com',
     '+.narwal.com',
     '+.narwaltech.com',
@@ -5172,6 +5193,7 @@ const fakeIpFilterSnapshots = {
     '+.xiaoluyouxuan.com',
     '+.xiaoluzhidian.com',
     '+.xiaomaicn.com',
+    '+.xiaomaigui.com',
     '+.xiaomengai.com',
     '+.xiaomimimo.com',
     '+.xiaomingtaiji.com',
@@ -5257,6 +5279,7 @@ const fakeIpFilterSnapshots = {
     '+.xuexi365.com.cn',
     '+.xuexi365.net',
     '+.xuexicha.com',
+    '+.xuexitong.com',
     '+.xundupdf.com',
     '+.xunfei.cn',
     '+.xunfeixxj.com',
@@ -5711,6 +5734,7 @@ const fakeIpFilterSnapshots = {
     '+.zzzmap.com',
     'ai.zhaomi.cn',
     'api.blipsandchitz.me',
+    'app.moegirl.org.cn',
     'ctdsb.clouddiffuse.xyz',
     'cueme-api.quark.cn',
     'end-api.shallow.ink',
@@ -5734,6 +5758,7 @@ const fakeIpFilterSnapshots = {
     'p8-juejin.byteimg.com',
     'p9-juejin.byteimg.com',
     'ss.bjmu.edu.cn',
+    'storage.moegirl.org.cn',
     'study.163.com',
     'time.amazonaws.cn',
     'time.izatcloud.net',
@@ -5893,8 +5918,18 @@ const rateRegionDefinitions = [
   },
 ];
 
-// 全部策略组定义（地区 + 倍率），统一用于节点匹配与归类
-const allRegionDefinitions = [...regionDefinitions, ...rateRegionDefinitions];
+// 定义家宽（住宅/原生 IP）节点策略组
+const homeRegionName = '家宽节点';
+const homeRegionDefinitions = [
+  {
+    name: homeRegionName,
+    regex: /家宽|住宅|原生\s*IP|家庭宽带|\bISP\b|\bRES\b|residential/i,
+    icon: `${iconBaseUrl}Home.svg`,
+  },
+];
+
+// 全部策略组定义（地区 + 倍率 + 家宽），统一用于节点匹配与归类
+const allRegionDefinitions = [...regionDefinitions, ...rateRegionDefinitions, ...homeRegionDefinitions];
 
 // Rule Providers 通用配置
 const ruleProviderCommonDomain = {
@@ -6169,6 +6204,43 @@ const serviceConfigs = [
     },
     icon: `${iconBaseUrl}Telegram.svg`,
     rules: ['RULE-SET,telegram,Telegram', 'RULE-SET,telegram_ip,Telegram,no-resolve'],
+  },
+  {
+    name: 'Discord',
+    baseOption: selectBaseOption,
+    // Discord 的原生 UDP 语音可能只有目标 IP；须在通用 UDP 443 拒绝之前按进程兜底。
+    beforeQuic: true,
+    providers: {
+      discord: {
+        ...ruleProviderCommonDomain,
+        url: `${ruleSetBaseUrl}geosite/discord.mrs`,
+        path: './ruleset/discord.mrs',
+      },
+    },
+    icon: 'https://cdn.jsdmirror.com/gh/TheSixPasserby/MyClash@main/Icons/svg/Discord.svg',
+    rules: [
+      'RULE-SET,discord,Discord',
+      ...[
+        'Discord.exe',
+        'DiscordPTB.exe',
+        'DiscordCanary.exe',
+        'DiscordDevelopment.exe',
+        'Discord',
+        'DiscordPTB',
+        'DiscordCanary',
+        'DiscordDevelopment',
+        'discord-ptb',
+        'discord-canary',
+        'discord-development',
+        'Discord Helper',
+        'Discord Helper (Renderer)',
+        'Discord PTB Helper',
+        'Discord PTB Helper (Renderer)',
+        'Discord Canary Helper',
+        'Discord Canary Helper (Renderer)',
+      ].map((process) => `PROCESS-NAME,${process},Discord`),
+      ...meowOptions.discordVoiceProcesses.map((process) => `AND,((NETWORK,UDP),(PROCESS-NAME,${process})),Discord`),
+    ],
   },
   {
     name: 'Steam',
@@ -6591,10 +6663,11 @@ function createRegionGroup(name, icon, proxies) {
 }
 
 /**
- * 将节点按地区/倍率归类，构建地区策略组、倍率策略组与“其他节点”组
+ * 将节点按地区/倍率/家宽归类，构建节点策略组与“其他节点”组
  */
 function buildRegionGroups(filteredProxies, customProxies) {
   const generateRateGroupEnabled = ruleOptionsEnable.生成倍率组;
+  const generateHomeGroupEnabled = ruleOptionsEnable.生成家宽节点组;
 
   const regionGroups = Object.fromEntries(allRegionDefinitions.map(({ name }) => [name, []]));
   const otherProxies = [];
@@ -6613,7 +6686,12 @@ function buildRegionGroups(filteredProxies, customProxies) {
   }
 
   const generatedRegionGroups = allRegionDefinitions
-    .filter((r) => regionGroups[r.name].length > 0 && (generateRateGroupEnabled || !rateRegionDefinitions.includes(r)))
+    .filter(
+      (r) =>
+        regionGroups[r.name].length > 0 &&
+        (generateRateGroupEnabled || !rateRegionDefinitions.includes(r)) &&
+        (generateHomeGroupEnabled || !homeRegionDefinitions.includes(r)),
+    )
     .flatMap((r) => createRegionGroup(r.name, r.icon, regionGroups[r.name]));
 
   if (otherProxies.length > 0) {
@@ -6679,6 +6757,12 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
 
   const functionalGroups = [];
   const functionalRules = [];
+  const priorityServices = serviceConfigs.filter((svc) => svc.beforeQuic && ruleOptionsEnable[svc.name]);
+  const priorityRules = priorityServices.flatMap((svc) =>
+    (svc.rules || []).map((rule) =>
+      minimalModeEnabled ? rule.replace(new RegExp(`,${svc.name}$`), ',默认代理') : rule,
+    ),
+  );
   const finalRuleProviders = { ...baseRuleProviders };
 
   if (!blockForeignQuicEnabled) {
@@ -6696,6 +6780,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
     const autoSelectGroupEnabled = ruleOptionsEnable.自动选择;
 
     const finalRuleProviders = { ...baseRuleProviders };
+    for (const svc of priorityServices) Object.assign(finalRuleProviders, svc.providers || {});
     if (!blockForeignQuicEnabled) delete finalRuleProviders.cn_additional;
 
     const defaultGroup = {
@@ -6729,6 +6814,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
       globalGroup,
       functionalGroups: [defaultGroup, ...(autoSelectGroupEnabled ? [autoSelectGroup] : [])],
       functionalRules: [],
+      priorityRules,
       finalRuleProviders,
       directGroup,
     };
@@ -6750,7 +6836,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
   for (const svc of orderedServiceConfigs) {
     if (!ruleOptionsEnable[svc.name]) continue;
 
-    functionalRules.push(...(svc.rules || []));
+    if (!svc.beforeQuic) functionalRules.push(...(svc.rules || []));
     Object.assign(finalRuleProviders, svc.providers || {});
   }
 
@@ -6815,7 +6901,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
     icon: `${iconBaseUrl}Global.svg`,
   };
 
-  return { globalGroup, functionalGroups, functionalRules, finalRuleProviders, directGroup };
+  return { globalGroup, functionalGroups, functionalRules, priorityRules, finalRuleProviders, directGroup };
 }
 
 // ---dns和hosts相关处理---
@@ -7035,9 +7121,9 @@ function matchDomainPattern(pattern, domains) {
 
 /**
  * 从右向左选择最具体的域名路径：具体标签 > 单层 * > 多层后缀。
- * hosts 精确键优先，其余同级规则保留订阅顺序；DNS 同一 trie 槽按后写覆盖。
+ * 同一 trie 槽按后写覆盖，适用于 hosts 和节点 DNS 策略。
  */
-function findDomainEntry(entries, domain, overwrite = false) {
+function findDomainEntry(entries, domain) {
   domain = normalizeDomain(domain);
   if (!domain) return undefined;
 
@@ -7053,13 +7139,10 @@ function findDomainEntry(entries, domain, overwrite = false) {
     const priority = Array.from({ length: labelCount }, (_, index) =>
       index < parts.length ? (parts[index] === '*' ? 1 : 2) : 0,
     );
-    priority.push(
-      Number(!overwrite && !pattern.startsWith('+.') && !pattern.startsWith('.') && !pattern.includes('*')),
-    );
 
     if (bestPriority) {
       const index = priority.findIndex((value, i) => value !== bestPriority[i]);
-      if ((index === -1 && !overwrite) || (index !== -1 && priority[index] < bestPriority[index])) continue;
+      if (index !== -1 && priority[index] < bestPriority[index]) continue;
     }
     bestEntry = entry;
     bestPriority = priority;
@@ -7228,7 +7311,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
   const nodeDnsPolicy = {};
   for (const domain of proxyDomains) {
     const matched =
-      findDomainEntry(matchedProxyPolicies[1], domain, true) || findDomainEntry(matchedProxyPolicies[0], domain, true);
+      findDomainEntry(matchedProxyPolicies[1], domain) || findDomainEntry(matchedProxyPolicies[0], domain);
     nodeDnsPolicy[domain] = matched ? matched[1] : defaultProxyDNS;
   }
 
@@ -7309,11 +7392,8 @@ function main(config) {
 
   const generatedRegionGroups = ruleOptionsEnable.极简模式 ? [] : buildRegionGroups(filteredProxies, customProxies);
 
-  const { globalGroup, functionalGroups, functionalRules, finalRuleProviders, directGroup } = buildFunctionalGroups(
-    filteredProxies,
-    generatedRegionGroups,
-    { customProxyNames, customGroup },
-  );
+  const { globalGroup, functionalGroups, functionalRules, priorityRules, finalRuleProviders, directGroup } =
+    buildFunctionalGroups(filteredProxies, generatedRegionGroups, { customProxyNames, customGroup });
 
   const { dns, hosts, proxies: mappedProxies } = buildDnsAndHostsConfig(config, filteredProxies);
 
@@ -7386,6 +7466,7 @@ function main(config) {
 
   newConfig['rules'] = [
     ...prefixRules,
+    ...priorityRules,
     ...(ruleOptionsEnable.屏蔽国外QUIC ? blockForeignQuic : []),
     ...functionalRules,
 
