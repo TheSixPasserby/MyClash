@@ -12,7 +12,7 @@
 - 保持客户端入口 `main(config)` 和 ES2020 语法兼容；脚本不依赖 Node.js API。
 - 脚本接收含 `proxies` 的机场配置；独立 YAML 使用 `proxy-providers`，两种入口不叠加。
 - 内网 DNS 必须使用实际可达地址。节点域名需能在代理连接建立前解析，避免 DNS 与代理互相依赖。
-- Fake-IP 域名快照同时存在于脚本和两份 YAML；更新时保持内容一致，精简版不含 FCM 专用名单。
+- Fake-IP 域名快照同时存在于脚本和两份 YAML；China 使用完整 cn 数据，更新时保持内容一致，精简版不含 FCM 专用名单。不用较小的 geolocation-cn 代替 cn。
 - 保留用户选择的 TUN 状态和路由方式。配置默认值、订阅填写方法及网络要求应在 README 中说明。
 - Discord 原生 UDP 的进程规则和域名规则须早于通用 QUIC 屏蔽；保留全局 TUN、UDP 节点及可选专用浏览器进程的说明。
 - 规则集 URL 中的目录名称不代表内核限制；不要因路径包含其他内核名称而改坏有效的 MRS 数据源。
@@ -24,7 +24,7 @@
 - SVG 使用 1024 × 1024 画布。保持现有等比归一化、居中、渐变和 Flutter 兼容结构。
 - 保留既有特例：OpenAI 的非等比外层变换；Microsoft、EHentai、PikPak、Static、Home 的指定缩放。
 - 不自动扩展形状缩放名单；国旗、圆形图案和字形不因形状推断调整。
-- 既有图标 CDN 前缀保持 `https://cdn.jsdmirror.com/gh/AIsouler/MyClash@main/Icons/svg/`；新增 Discord 图标使用本仓库对应路径，不改动其他图标的来源。
+- 图标 CDN 跟随上游使用 `https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/`；Discord 图标使用本仓库对应路径。规则集通过配置的 DIRECT 下载，不增加 CDN 域名的前置直连分流。
 - 修改引用时，核对大小写及目标文件存在，避免引入失效链接。
 
 ## 校验与收尾
