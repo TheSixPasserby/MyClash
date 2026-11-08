@@ -109318,9 +109318,10 @@ function stripDnsSuffix(dns) {
   if (encrypted) {
     const queryIndex = prefix.indexOf('?');
     if (queryIndex !== -1) {
-      const params = prefix.slice(queryIndex + 1).split('&').filter((param) =>
-        param.split('=')[0].trim().toLowerCase() !== 'proxy',
-      );
+      const params = prefix
+        .slice(queryIndex + 1)
+        .split('&')
+        .filter((param) => param.split('=')[0].trim().toLowerCase() !== 'proxy');
       prefix = prefix.slice(0, queryIndex) + (params.length ? '?' + params.join('&') : '');
     }
     // 加密 DNS 的片段为 SNI；剥离旧路由标记及无法作为主机名的策略组名称。
