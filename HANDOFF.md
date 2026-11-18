@@ -33,7 +33,7 @@
 - **DNS 与节点引导。** 主 DNS 是经“默认代理”的 DoH（Nightly `full` 构建自动协商 HTTP/2 并复用连接；切勿开启 `prefer-h3: true`，否则带 `?proxy=` 的域名上游会被 `reject_proxied_quic_hostname` 拒绝）。`DIRECT` 使用国内 DoT，开启 `direct-nameserver-follow-policy: true` 与 `nameserver-policy-exclusive: true`（脚本支持布尔覆盖，默认 `true`），且默认启用 `dns.use-system-hosts: true`。脚本无条件生成 `dns.proxy-server-nameserver` 与去 `#DIRECT` 的 `dns.proxy-server-nameserver-policy`，并在 `nameserver-policy` 中保持域名块位于所有 `rule-set:` 之前。开启 `ipv6` 时才输出 `dns.fake-ip-range6`（默认 `'fdfe:dcba:9877::/64'`），避免在纯 IPv4 下触发告警。`createDomainEntryFinder` 和 `createDomainMatcher` 用预编译索引保留大小写、尾点和空格规范化、具体标签优先及同位置后写覆盖的行为。
 - **Fake-IP 快照。** Nightly 的 `fake-ip-filter` 仍不支持 `rule-set:`，三份入口各自内置快照。当前快照源自 `bett-rules@f9a7499`（2026-11-18）：转小写并排序去重后，私有 132、兼容 121（含 `mijia cloud` 与 `+.pub.3gppnetwork.org`）、国内 107,455、FCM 12；全量去重后 107,706，精简版 107,694。脚本的极简模式和关闭 FCM 的模式省略 FCM，并按实际节点追加域名。
 - **规则与 QUIC。** 顺序是 AdBlock、私有及国内域名直连、Discord 优先规则、可选 QUIC 屏蔽、服务与国外域名规则、`geolocation-!cn`、国内与私有 IP 规则、服务 IP 规则，最后 `MATCH`。QUIC 默认关闭；开启时直接利用 Nightly 逻辑规则内嵌 `RULE-SET`：`AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn),(RULE-SET,cn_ip,no-resolve),(RULE-SET,private_ip,no-resolve)))))),REJECT`，不再生成或维护 `sub-rules`。
-- **Nightly 全局、TUN、嗅探与节点参数。** 入口默认设置 `unified-delay: true`；脚本去掉 `meowOptions.nightly` 开关，新增 `meowOptions.tunStack`（支持 `'system'`/`'mixed'`/`'lwip'`，剔除会触发告警的 `'gvisor'`/`'mips'`），并继承 `traffic-ledger`、`tcp-keepalive*`、`tcp-idle-timeout`、`global-client-fingerprint`、`global-ua`、`interface-name`、`routing-mark`、`max-connections`、`connection-notes`、`logbook` 及过滤后的 `sniffer`（仅保留 `TLS`/`HTTP`/`QUIC` 协议的 `ports`，忽略 `force-dns-mapping` 及协议内未知键）。节点保留受支持的逐节点 `ip-version`（未启用 `ipv6` 时剔除 `ipv6` / `ipv6-prefer`），同时保留 `tfo`、`mptcp`、`dialer-proxy`、`wireguard` 等 Nightly 能力。独立 YAML 移除 `&proxy_providers_common` 中的禁用 `health-check` 块以消除 Nightly 告警。
+- **Nightly 全局、TUN、嗅探与节点参数。** 入口默认设置 `unified-delay: true`；脚本去掉 `meowOptions.nightly` 开关，新增 `meowOptions.tunStack`（支持 `'system'`/`'mixed'`/`'lwip'`，剔除会触发告警的 `'gvisor'`/`'mips'`）与上游同步的 `ruleOptionsEnable.代理IPV4优先` / `代理IPV6优先`（`getIpVersionPreference`，两者同开时不生效，IPv6 优先仅在 `meowOptions.ipv6: true` 时下发 `'ipv6-prefer'`），并继承 `traffic-ledger`、`tcp-keepalive*`、`tcp-idle-timeout`、`global-client-fingerprint`、`global-ua`、`interface-name`、`routing-mark`、`max-connections`、`connection-notes`、`logbook` 及过滤后的 `sniffer`（仅保留 `TLS`/`HTTP`/`QUIC` 协议的 `ports`，忽略 `force-dns-mapping` 及协议内未知键）。节点通过 `sanitizeProxyIpVersion` 保留受支持的逐节点 `ip-version`（未启用 `ipv6` 时剔除 `ipv6` / `ipv6-prefer`），同时保留 `tfo`、`mptcp`、`dialer-proxy`、`wireguard` 等 Nightly 能力。独立 YAML 移除 `&proxy_providers_common` 中的禁用 `health-check` 块以消除 Nightly 告警。
 
 ## 验证与排障
 
@@ -45,15 +45,15 @@ node --check MihomoAddon.js
 git diff --check
 ```
 
-用临时目录存放校验配置和本地样例，避免与正在运行的 Nyanpasu 共用内核目录。脚本用少量虚拟节点调用 `main(config)` 生成配置。两份 YAML 保留原有锚点、合并键与正则，用本地样例替换空订阅和在线规则集（可直接复制 `bett-rules@meta` 的真实 `.mrs` 文件至 `./ruleset/`），规则集样例应保持各自的 `behavior`。需要严格校验时，在测试配置顶层设置 `strict: true`，再用 `meow -d "<临时目录>" -f "<校验配置>" -t`。覆盖默认与极简模式、IPv6 与 TUN 栈、Discord 与 QUIC 开关、链式代理、hosts 改写、`proxy-providers` 拦截与 `MihomoAddon.js` 串联输出。完成后清理临时目录和工具。
+用临时目录存放校验配置和本地样例，避免与正在运行的 Nyanpasu 共用内核目录。脚本用少量虚拟节点调用 `main(config)` 生成配置。两份 YAML 保留原有锚点、合并键与正则，用本地样例替换空订阅和在线规则集（可直接复制 `bett-rules@meta` 的真实 `.mrs` 文件至 `./ruleset/`），规则集样例应保持各自的 `behavior`。需要严格校验时，在测试配置顶层设置 `strict: true`，再用 `meow -d "<临时目录>" -f "<校验配置>" -t`。覆盖默认与极简模式、`代理IPV4优先`/`代理IPV6优先` 开关、IPv6 与 TUN 栈、Discord 与 QUIC 开关、链式代理、hosts 改写、`proxy-providers` 拦截、ES2020/QuickJS 引擎兼容及 `MihomoAddon.js` 串联输出。完成后清理临时目录和工具。
 
-本轮验证结果（Node `v24.21.0` + `meow 0.29.0-alpha+23cf184`，全部开启 `strict: true` 与真实 `bett-rules@f9a7499` `.mrs` 规则集）：
+本轮验证结果（Node `v24.21.0` + `espree` ES2020 + `quickjs-emscripten` + `meow 0.29.0-alpha+23cf184`，全部开启 `strict: true` 与真实 `bett-rules@f9a7499` `.mrs` 规则集）：
 
-- `node --check MeowScript.js` 与 `node --check MihomoAddon.js` 通过；链接与 `Icons/` 大小写核对通过。
+- `node --check MeowScript.js`、`node --check MihomoAddon.js`、`espree` 严格 ES2020 语法解析、`QuickJS` 实机 `main()` 执行，以及链接与 `Icons/` 大小写核对全部通过。
 - `MeowConfig.yaml` 与 `MeowConfigLite.yaml` 的默认配置及全部 Nightly 注释项（含 `global-client-fingerprint`、`global-ua`、`tun.stack: system`、`sniffer` 与 `AND` QUIC 规则）开启配置共 4 组均通过 `meow -t`，零警告零错误。
-- `MeowScript.js` 6 组场景（`default`、`ipv6-tun`、`quic-discord`、`minimal`、`chain-proxy`、`hosts-rewrite`）全部通过 `meow -t`（仅 `tun.stack: mixed` 在 Linux 触发内核预期提示 `mixed is system here`，其余零警告）；`proxy-providers` 输入拦截抛出预期错误。
+- `MeowScript.js` 10 组场景（`default`、`ip-version-v4-prefer`、`ip-version-v6-prefer`、`ip-version-v6-guarded`、`ip-version-both-enabled`、`ipv6-tun`、`quic-discord`、`minimal`、`chain-proxy`、`hosts-rewrite`）全部通过 `meow -t`（仅 `ipv6-tun` 的 `tun.stack: mixed` 在 Linux 触发内核预期提示 `mixed is system here`，其余零警告）；`proxy-providers` 输入拦截抛出预期错误。
 - `mihomoScript.js`（开启 QUIC 屏蔽）串联 `MihomoAddon.js` 校验通过，`Discord` 与 `NeoSek` 策略组及规则均早于 `AND` QUIC 规则与 `MATCH`。
-- 注：本轮检验了静态/配置编译校验；真实机场订阅连通性、DoH/DoT 远端解析及 TUN/Discord 实机转发仍需在运行环境实测。
+- 注：本轮检验了静态/配置编译与 JS 引擎兼容校验；真实机场订阅连通性、DoH/DoT 远端解析及 TUN/Discord 实机转发仍需在运行环境实测。
 
 | 现象                                    | 优先排查                                                                                                                                                                                                                                                                                                    |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

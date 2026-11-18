@@ -77,6 +77,8 @@ const ruleOptionsEnable = {
   过滤高倍率节点: false, // 是否过滤高倍率节点
   过滤非地区节点: true, // 是否过滤非地区节点
   屏蔽代理QUIC流量: false, // 是否屏蔽非国内目标的 QUIC 流量
+  代理IPV4优先: false, // 是否将订阅节点统一为 IPv4 优先（与“代理IPV6优先”同时开启时不生效）
+  代理IPV6优先: false, // 是否将订阅节点统一为 IPv6 优先（需开启 meowOptions.ipv6；与“代理IPV4优先”同时开启时不生效）
   链式代理: false, // 自定义节点作为落地节点，经“链式中转”策略组中转
 };
 
@@ -108647,8 +108649,28 @@ function filterAndNormalizeProxies(config) {
     throw new Error('配置文件中未找到任何代理节点，请使用机场提供的配置文件进行覆写');
   }
 
-  // Nightly 原生支持逐节点 ip-version；开启 IPv6 时保留合法值，纯 IPv4 模式剔除 IPv6 偏好。
-  return filteredProxies.map(sanitizeProxyIpVersion);
+  // Nightly 原生支持逐节点 ip-version；应用全局优先偏好后，再按当前 IPv6 状态清理合法值。
+  const ipVersionPreference = getIpVersionPreference();
+  return filteredProxies.map((proxy) => {
+    const updated =
+      ipVersionPreference && proxy['ip-version'] !== ipVersionPreference
+        ? { ...proxy, 'ip-version': ipVersionPreference }
+        : proxy;
+    return sanitizeProxyIpVersion(updated);
+  });
+}
+
+/**
+ * 读取代理 IP 版本偏好：仅其中一个开关开启时返回对应偏好，
+ * 同时开启或同时关闭时返回 null；IPv6 优先仅在 meowOptions.ipv6 为 true 时生效。
+ */
+function getIpVersionPreference() {
+  const ipv4PreferEnabled = ruleOptionsEnable.代理IPV4优先;
+  const ipv6PreferEnabled = ruleOptionsEnable.代理IPV6优先;
+
+  if (ipv4PreferEnabled && !ipv6PreferEnabled) return 'ipv4-prefer';
+  if (ipv6PreferEnabled && !ipv4PreferEnabled && meowOptions.ipv6) return 'ipv6-prefer';
+  return null;
 }
 
 const validIpVersionsIpv4 = new Set(['dual', 'ipv4', 'ipv4-prefer']);
