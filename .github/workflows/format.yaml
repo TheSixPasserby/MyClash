@@ -5,6 +5,7 @@ on:
     branches: ['main']
     paths:
       - 'MeowScript.js'
+      - 'MihomoAddon.js'
       - 'Config/MeowConfig*.yaml'
       - 'README.md'
       - 'AGENT.md'
@@ -13,6 +14,7 @@ on:
   pull_request:
     paths:
       - 'MeowScript.js'
+      - 'MihomoAddon.js'
       - 'Config/MeowConfig*.yaml'
       - 'README.md'
       - 'AGENT.md'
@@ -33,7 +35,9 @@ jobs:
         with:
           node-version: '24'
       - name: Check script syntax
-        run: node --check MeowScript.js
+        run: |
+          node --check MeowScript.js
+          node --check MihomoAddon.js
 
   format:
     if: github.event_name != 'pull_request'
@@ -48,14 +52,14 @@ jobs:
           node-version: '24'
       - name: Install formatter
         run: npm install -g prettier
-      - name: Format Meow files
+      - name: Format configuration files
         run: |
-          git ls-files -z -- 'MeowScript.js' 'Config/MeowConfig*.yaml' 'README.md' 'AGENT.md' '.github/workflows/*.yaml' | xargs -0 -r prettier --write
+          git ls-files -z -- 'MeowScript.js' 'MihomoAddon.js' 'Config/MeowConfig*.yaml' 'README.md' 'AGENT.md' '.github/workflows/*.yaml' | xargs -0 -r prettier --write
       - name: Commit formatting
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- MeowScript.js Config/MeowConfig*.yaml README.md AGENT.md .github/workflows/
+          git add -- MeowScript.js MihomoAddon.js Config/MeowConfig*.yaml README.md AGENT.md .github/workflows/
           if ! git diff --cached --quiet; then
             git commit -m "chore: format Meow files"
             git push

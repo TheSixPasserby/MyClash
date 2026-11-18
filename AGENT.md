@@ -1,9 +1,9 @@
-# Meow 维护约定
+# MyClash 维护约定
 
 ## 维护范围
 
-- 发布入口为根目录 `MeowScript.js`、`Config/MeowConfig.yaml` 和 `Config/MeowConfigLite.yaml`。
-- 仓库只维护 Meow。说明和注释应描述当前用途、参数与实际限制，不保留其他内核的下载入口或迁移对照。
+- Meow 发布入口为根目录 `MeowScript.js`、`Config/MeowConfig.yaml` 和 `Config/MeowConfigLite.yaml`。
+- `MihomoAddon.js` 是追加到原作者 Mihomo 脚本之后的独立覆写，只负责 Discord 和 NeoSek 策略组及其规则。
 - `Icons/` 为图标及参考源，`Rules/` 为通用规则资源。保留来源归属和 `LICENSE`。
 - 功能更新需要审查 Meow 支持情况，保留必要的 DNS、直连、正则、分组和 QUIC 处理。
 
@@ -11,6 +11,7 @@
 
 - 保持客户端入口 `main(config)` 和 ES2020 语法兼容；脚本不依赖 Node.js API。
 - 脚本接收含 `proxies` 的机场配置；独立 YAML 使用 `proxy-providers`，两种入口不叠加。
+- Mihomo 附加脚本接受前序覆写的输出，保留已有策略组和规则的相对顺序，确保新增规则优先于通用 QUIC 和兜底规则。
 - 内网 DNS 必须使用实际可达地址。节点域名需能在代理连接建立前解析，避免 DNS 与代理互相依赖。
 - Fake-IP 域名快照同时存在于脚本和两份 YAML；China 使用完整 cn 数据，更新时保持内容一致，精简版不含 FCM 专用名单。不用较小的 geolocation-cn 代替 cn。
 - 保留用户选择的 TUN 状态和路由方式。配置默认值、订阅填写方法及网络要求应在 README 中说明。
@@ -30,7 +31,7 @@
 ## 校验与收尾
 
 - 注释清理应保持 JavaScript 的可执行结构及 YAML 解析结果不变。
-- 脚本至少执行 `node --check MeowScript.js`；配置变更使用 Meow 的 `-t` 模式校验，静态配置需先填写订阅或准备校验用缓存。
+- 两份脚本均执行 `node --check`。用对应内核的 `-t` 模式校验配置；Meow 配置需要准备订阅或校验用缓存，Mihomo 使用上游脚本和附加脚本的串联输出校验。
 - 检查 README 本地链接、图标引用和工作流中的文件路径。
 - 校验工具、依赖和中间文件放在仓库外，完成后清理；不要恢复已移除的截图和测试目录。
 - 提交前运行 `git diff --check`，保留文件原有换行风格，避免无关格式化。

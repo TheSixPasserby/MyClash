@@ -1,7 +1,7 @@
 /**
  * Meow 配置覆写脚本（Clash Nyanpasu）
  * 原作者：AIsouler；维护：TheSixPasserby。许可证：MIT，见仓库 LICENSE。
- * 适用内核：meow 0.29.0 或更新版本。
+ * 适用内核：Meow nightly（v0.29.0-alpha+23cf184 或更新版本）。
  * 功能：服务分流、地区/倍率分组、自定义节点及节点 hosts 处理。
  * 在 Nyanpasu 中作为 JavaScript 覆写导入，输入订阅须包含 proxies 节点列表。
  * 使用 proxy-providers 时请选用 Config/ 下的独立配置，不叠加本脚本。
@@ -21,6 +21,8 @@ const meowOptions = {
   localDNS: ['192.168.1.1'],
   // null 沿用客户端设置；true/global 全局接管，'fake-ip' 仅接管 Fake-IP，false 不添加路由。
   tunAutoRoute: null,
+  // null 沿用输入配置；可选 'system'、'mixed'（Linux 下等效 system TCP 栈）或 'lwip'。
+  tunStack: null,
   // 每个直连候选 IP 最多等待 2 秒，再尝试下一个；不是并发拨号。
   directConnectTimeout: 2,
   // 可选：专用于 Discord 的浏览器进程名，如 ['firefox.exe']；其全部 UDP 流量会走 Discord。
@@ -78,7 +80,7 @@ const ruleOptionsEnable = {
   链式代理: false, // 自定义节点作为落地节点，经“链式中转”策略组中转
 };
 
-// Fake-IP 排除域名快照（2026-11-08，来源 bett-rules）。
+// Fake-IP 排除域名快照（2026-11-18，来源 bett-rules）。
 // 排除名单随脚本更新；路由使用的远程规则集独立在线更新。
 const fakeIpFilterSnapshots = {
   private: [
@@ -262,6 +264,7 @@ const fakeIpFilterSnapshots = {
     '+.oray.com',
     '+.orayimg.com',
     '+.pool.ntp.org',
+    '+.pub.3gppnetwork.org',
     '+.sandai.net',
     '+.srv.nintendo.net',
     '+.steamcontent.com',
@@ -1919,7 +1922,6 @@ const fakeIpFilterSnapshots = {
     '+.16885.com',
     '+.16886000.com',
     '+.16888.com',
-    '+.1688988.com',
     '+.1688du.com',
     '+.1688e.com',
     '+.1688eric.com',
@@ -2770,6 +2772,7 @@ const fakeIpFilterSnapshots = {
     '+.21kk.cc',
     '+.21ks.net',
     '+.21kunpeng.com',
+    '+.21kyj.com',
     '+.21ld.com',
     '+.21maoyi.com',
     '+.21mcu.com',
@@ -2863,6 +2866,7 @@ const fakeIpFilterSnapshots = {
     '+.22n.com',
     '+.22net.com',
     '+.22plc.com',
+    '+.22ppt.com',
     '+.22pq.com',
     '+.22tianbo.com',
     '+.22tj.com',
@@ -4482,7 +4486,6 @@ const fakeIpFilterSnapshots = {
     '+.4779.com',
     '+.47819.com',
     '+.47daili.com',
-    '+.47e17a13ee18fa43.com',
     '+.47gs.com',
     '+.47rq.com',
     '+.47zu.com',
@@ -4507,7 +4510,6 @@ const fakeIpFilterSnapshots = {
     '+.4901.com',
     '+.490186.com',
     '+.491.com',
-    '+.492f2622e64c138e.com',
     '+.4930.com',
     '+.4933.com',
     '+.49358.com',
@@ -6639,7 +6641,6 @@ const fakeIpFilterSnapshots = {
     '+.68u.co',
     '+.68websoft.com',
     '+.68zhan.net',
-    '+.69090.com',
     '+.6912s.com',
     '+.6917.com',
     '+.692657.com',
@@ -8772,6 +8773,7 @@ const fakeIpFilterSnapshots = {
     '+.9you.com',
     '+.9you.net',
     '+.9yread.com',
+    '+.9yuanlive.com',
     '+.9yue.com',
     '+.9yuntu.com',
     '+.9yuonline.com',
@@ -8821,6 +8823,7 @@ const fakeIpFilterSnapshots = {
     '+.a5xiazai.com',
     '+.a61cee76f4df41b1.com',
     '+.a6api.com',
+    '+.a6api.vip',
     '+.a6h8.com',
     '+.a700in.ren',
     '+.a75d755806b1095d.com',
@@ -9259,6 +9262,7 @@ const fakeIpFilterSnapshots = {
     '+.adpfm513.com',
     '+.adplusx.com',
     '+.adpsh.com',
+    '+.adqiyu.com',
     '+.adqtt.net',
     '+.adquan.com',
     '+.adrkwai.com',
@@ -9460,6 +9464,7 @@ const fakeIpFilterSnapshots = {
     '+.agnaw.com',
     '+.agpolis.com',
     '+.agrantsem.com',
+    '+.agriglobaltradeai.com',
     '+.agriotcloud.com',
     '+.agrittex.com',
     '+.agrochemshow.com',
@@ -10118,6 +10123,7 @@ const fakeIpFilterSnapshots = {
     '+.airtofly.com',
     '+.airtu.me',
     '+.airwh.com',
+    '+.airxizang.com',
     '+.aisanrenxing.com',
     '+.aisaohuo.com',
     '+.aisbeijing.com',
@@ -10475,6 +10481,7 @@ const fakeIpFilterSnapshots = {
     '+.alictf.com',
     '+.alidayu.com',
     '+.aliddmall.com',
+    '+.alidns-2.com',
     '+.alidns.com',
     '+.alidns.net',
     '+.alidnsv122.com',
@@ -12056,6 +12063,7 @@ const fakeIpFilterSnapshots = {
     '+.atcloudbox.com',
     '+.atcontainer.com',
     '+.atcpu.com',
+    '+.atengyun.com',
     '+.aterminal.net',
     '+.atfeng.com',
     '+.atgbiotechnology.com',
@@ -15494,7 +15502,6 @@ const fakeIpFilterSnapshots = {
     '+.bjxf315.com',
     '+.bjxhly.com',
     '+.bjximei.com',
-    '+.bjxingma.com',
     '+.bjxingzheng.com',
     '+.bjxinku.com',
     '+.bjxjyy666.com',
@@ -17332,7 +17339,6 @@ const fakeIpFilterSnapshots = {
     '+.caiweiming.com',
     '+.caiwennews.com',
     '+.caiwuchina.com',
-    '+.caixadirectaanalisar.com',
     '+.caixin.com',
     '+.caixinfoundation.org',
     '+.caixinmedia.com',
@@ -19239,6 +19245,7 @@ const fakeIpFilterSnapshots = {
     '+.chaoyi996.com',
     '+.chaoyinjiu.com',
     '+.chaoyuesd.com',
+    '+.chaoyun168.com',
     '+.chaozhoudaily.com',
     '+.chaozhouyin.com',
     '+.chaozuo.com',
@@ -19267,6 +19274,7 @@ const fakeIpFilterSnapshots = {
     '+.chatairc.com',
     '+.chatanywhere.tech',
     '+.chatartpro.com',
+    '+.chatdoing.com',
     '+.chateaustarriver.com',
     '+.chatglm.site',
     '+.chatgptboke.com',
@@ -19274,6 +19282,7 @@ const fakeIpFilterSnapshots = {
     '+.chatmindai.net',
     '+.chatnos.com',
     '+.chatopera.com',
+    '+.chatppt.com',
     '+.chatqp.net',
     '+.chatvgx.com',
     '+.chatyygpt.com',
@@ -19629,6 +19638,7 @@ const fakeIpFilterSnapshots = {
     '+.chezvi.com',
     '+.chfsmartad.com',
     '+.chgcw.com',
+    '+.chggzh.com',
     '+.chghouse.org',
     '+.chgi.net',
     '+.chgie.com',
@@ -21136,7 +21146,6 @@ const fakeIpFilterSnapshots = {
     '+.chuanshanqundao.com',
     '+.chuansinfo.com',
     '+.chuantec.com',
-    '+.chuantiegroup.com',
     '+.chuanye.com',
     '+.chuanyejinxuan.xyz',
     '+.chuanyifu.com',
@@ -22401,6 +22410,7 @@ const fakeIpFilterSnapshots = {
     '+.cndi-bj.com',
     '+.cndi.com',
     '+.cndids.com',
+    '+.cndik.com',
     '+.cndingli.com',
     '+.cndingxi.com',
     '+.cndits.com',
@@ -22505,6 +22515,7 @@ const fakeIpFilterSnapshots = {
     '+.cngin.com',
     '+.cngma.com',
     '+.cngold.org',
+    '+.cngoldprice.com',
     '+.cngoldres.com',
     '+.cngolf.tv',
     '+.cngongfu.com',
@@ -23179,6 +23190,7 @@ const fakeIpFilterSnapshots = {
     '+.codeweixin.com',
     '+.codewoody.com',
     '+.codex-watch.com',
+    '+.codexplus.vip',
     '+.codezyw.com',
     '+.codigoscript.com',
     '+.coding-io.com',
@@ -23263,7 +23275,6 @@ const fakeIpFilterSnapshots = {
     '+.college-ing.com',
     '+.college.globalsign.com',
     '+.collt.org',
-    '+.colly-pink.com',
     '+.colobu.com',
     '+.colocess.com',
     '+.color-measure.com',
@@ -25084,6 +25095,7 @@ const fakeIpFilterSnapshots = {
     '+.cuuhn.com',
     '+.cuumo.com',
     '+.cux.cc',
+    '+.cuzkeplox.com',
     '+.cuzz.site',
     '+.cvc898cvc.com',
     '+.cvchome.com',
@@ -25494,6 +25506,7 @@ const fakeIpFilterSnapshots = {
     '+.czyuxing.com',
     '+.czyxba.com',
     '+.czyzd.com',
+    '+.czzdpb.com',
     '+.czzqp.com',
     '+.czzsw.com',
     '+.czztjj.com',
@@ -25745,7 +25758,6 @@ const fakeIpFilterSnapshots = {
     '+.daigou.com',
     '+.daihing.com',
     '+.daijun.com',
-    '+.daikandq.com',
     '+.daikuan.com',
     '+.daili321.com',
     '+.dailianmama.com',
@@ -25876,6 +25888,7 @@ const fakeIpFilterSnapshots = {
     '+.damijing.com',
     '+.damingweb.com',
     '+.damiw.com',
+    '+.damixiao.com',
     '+.damndigital.com',
     '+.damo-academy.com',
     '+.damodel.com',
@@ -26086,6 +26099,7 @@ const fakeIpFilterSnapshots = {
     '+.darknavy.org',
     '+.darknight.games',
     '+.darmao.com',
+    '+.darmoshark.cc',
     '+.darongcheng.com',
     '+.darryring.com',
     '+.dartchina.com',
@@ -26492,6 +26506,7 @@ const fakeIpFilterSnapshots = {
     '+.ddedush.com',
     '+.ddfans.com',
     '+.ddfchina.com',
+    '+.ddfl5.com',
     '+.ddfresh.net',
     '+.ddfzb.com',
     '+.ddgjjj.com',
@@ -27028,6 +27043,7 @@ const fakeIpFilterSnapshots = {
     '+.dggcyy.com',
     '+.dggdk.com',
     '+.dgggs.com',
+    '+.dgghj.ltd',
     '+.dgghy.com',
     '+.dggjqw.com',
     '+.dggjyy.com',
@@ -27358,6 +27374,7 @@ const fakeIpFilterSnapshots = {
     '+.dicila-china.com',
     '+.dicom365.com',
     '+.dictall.com',
+    '+.dida.com',
     '+.dida110.com',
     '+.dida365.com',
     '+.didabds.com',
@@ -27864,6 +27881,7 @@ const fakeIpFilterSnapshots = {
     '+.dlxk.com',
     '+.dlxmicro.com',
     '+.dlxww.com',
+    '+.dly-cn.com',
     '+.dly56.com',
     '+.dlyy365.com',
     '+.dlzb.com',
@@ -30275,6 +30293,7 @@ const fakeIpFilterSnapshots = {
     '+.ef17145aecd7dd06.com',
     '+.ef360.com',
     '+.ef360.net',
+    '+.efaka.net',
     '+.efang.tv',
     '+.efangwang.com',
     '+.efapiao.com',
@@ -30757,7 +30776,6 @@ const fakeIpFilterSnapshots = {
     '+.enjoyor.net',
     '+.enjoyyue.com',
     '+.enjoyz.com',
-    '+.enketu.com',
     '+.enkichen.com',
     '+.enkj.com',
     '+.enkris.com',
@@ -32310,6 +32328,7 @@ const fakeIpFilterSnapshots = {
     '+.feelcars.com',
     '+.feelchat.net',
     '+.feelec.net',
+    '+.feelfish.com',
     '+.feelsoar.com',
     '+.feemoo.com',
     '+.feemoo.hk',
@@ -32489,6 +32508,7 @@ const fakeIpFilterSnapshots = {
     '+.felicitysolar.com',
     '+.feling.net',
     '+.felink.com',
+    '+.felix-fang.life',
     '+.felix021.com',
     '+.felizpg.com',
     '+.felmvip.com',
@@ -32751,6 +32771,7 @@ const fakeIpFilterSnapshots = {
     '+.fhd001.com',
     '+.fheb-four.com',
     '+.fheb-six.com',
+    '+.fhezyk.com',
     '+.fhfxys.com',
     '+.fhgame.com',
     '+.fhgjds.com',
@@ -33490,6 +33511,7 @@ const fakeIpFilterSnapshots = {
     '+.fosstea.com',
     '+.fosun-uhi.com',
     '+.fosun.com',
+    '+.fosung.com',
     '+.fosunhealth.com',
     '+.fosunholiday.com',
     '+.fosunmetal.com',
@@ -33996,7 +34018,6 @@ const fakeIpFilterSnapshots = {
     '+.fumiaoyinpin.com',
     '+.fumin.com',
     '+.fumu.com',
-    '+.fumubang.com',
     '+.fumuhui.com',
     '+.fun.tv',
     '+.fun4go.com',
@@ -35324,6 +35345,7 @@ const fakeIpFilterSnapshots = {
     '+.gdshunna.net',
     '+.gdshuojin.com',
     '+.gdsia.net',
+    '+.gdsicsemi.com',
     '+.gdsjqr.com',
     '+.gdsjx.com',
     '+.gdsjxjy.com',
@@ -36782,6 +36804,7 @@ const fakeIpFilterSnapshots = {
     '+.gongkaohub.com',
     '+.gongkaoleida.com',
     '+.gongkaowo.com',
+    '+.gongke.net',
     '+.gongkong.com',
     '+.gongkongbpo.com',
     '+.gongkongedu.com',
@@ -37189,6 +37212,7 @@ const fakeIpFilterSnapshots = {
     '+.greenits.net',
     '+.greenlandcn.com',
     '+.greenlandsc.com',
+    '+.greennet-inc.com',
     '+.greenpine.cc',
     '+.greenswolf.com',
     '+.greentomail.com',
@@ -38057,6 +38081,7 @@ const fakeIpFilterSnapshots = {
     '+.guyuenglish.com',
     '+.guyungame.com',
     '+.guyuns.asia',
+    '+.guzaza.com',
     '+.guzhang.com',
     '+.guzhenm.com',
     '+.guzhongtrade.com',
@@ -39801,6 +39826,7 @@ const fakeIpFilterSnapshots = {
     '+.gyaqyy.com',
     '+.gyb086.com',
     '+.gybyscy.com',
+    '+.gyccwx.com',
     '+.gycharm.com',
     '+.gycode.com',
     '+.gyddos.com',
@@ -41257,6 +41283,7 @@ const fakeIpFilterSnapshots = {
     '+.haohuan.com',
     '+.haohuanjiao.com',
     '+.haohuoyuan.com',
+    '+.haohuxx.com',
     '+.haointl.com',
     '+.haoinvest.com',
     '+.haoji.me',
@@ -41718,6 +41745,7 @@ const fakeIpFilterSnapshots = {
     '+.hbgrb.net',
     '+.hbgroups.com',
     '+.hbgsetc.com',
+    '+.hbgsoft.com',
     '+.hbgswl.com',
     '+.hbgwy.org',
     '+.hbgzh.com',
@@ -42248,6 +42276,7 @@ const fakeIpFilterSnapshots = {
     '+.heartide.com',
     '+.heartinsti.com',
     '+.heartxin.com',
+    '+.heartyong.com',
     '+.heating-sh.com',
     '+.heatingtrace.com',
     '+.heavenlywind.cc',
@@ -43108,6 +43137,7 @@ const fakeIpFilterSnapshots = {
     '+.hibymusic.com',
     '+.hic.cloud',
     '+.hicane.com',
+    '+.hicaspian.com',
     '+.hicdma.com',
     '+.hiceon.com',
     '+.hichain.com',
@@ -43288,6 +43318,7 @@ const fakeIpFilterSnapshots = {
     '+.hiphotonics.com',
     '+.hipiao.com',
     '+.hipole.com',
+    '+.hippoaixue.com',
     '+.hippoanimation.com',
     '+.hippter.com',
     '+.hipu.com',
@@ -45023,6 +45054,7 @@ const fakeIpFilterSnapshots = {
     '+.htfilter.com',
     '+.htfpartner.com',
     '+.htfutures.com',
+    '+.htfzsdk.com',
     '+.htg520.com',
     '+.htgjjl.com',
     '+.htgkdz.com',
@@ -48242,7 +48274,6 @@ const fakeIpFilterSnapshots = {
     '+.iikuzhan.com',
     '+.iikx.com',
     '+.iinhotel.com',
-    '+.iinorii.com',
     '+.iiolink.com',
     '+.iiong.com',
     '+.iipcloud.com',
@@ -50860,7 +50891,6 @@ const fakeIpFilterSnapshots = {
     '+.jiancepai.com',
     '+.jiancepaper.com',
     '+.jiancesys.com',
-    '+.jianchiapp.com',
     '+.jianchihu.net',
     '+.jiandaima.com',
     '+.jiandan.net',
@@ -51150,6 +51180,7 @@ const fakeIpFilterSnapshots = {
     '+.jiayaw.com',
     '+.jiayi56.com',
     '+.jiayin618.com',
+    '+.jiayinglive.com',
     '+.jiayougo.com',
     '+.jiayoujsq.com',
     '+.jiayouxueba.com',
@@ -52847,6 +52878,7 @@ const fakeIpFilterSnapshots = {
     '+.joyinvleah.com',
     '+.joyj.com',
     '+.joymeng.com',
+    '+.joymeter.com',
     '+.joyncleon.com',
     '+.joynext.com',
     '+.joyochem.com',
@@ -52861,6 +52893,7 @@ const fakeIpFilterSnapshots = {
     '+.joyson.com',
     '+.joyssl.com',
     '+.joystay.net',
+    '+.joysuch.com',
     '+.joysung.com',
     '+.joysunsh.com',
     '+.joytest.org',
@@ -53818,7 +53851,6 @@ const fakeIpFilterSnapshots = {
     '+.juming-xz.com',
     '+.juming.com',
     '+.jumingwang.com',
-    '+.jumold.com',
     '+.jumore.com',
     '+.jump-center.com',
     '+.jump-game.com',
@@ -54526,6 +54558,7 @@ const fakeIpFilterSnapshots = {
     '+.jzxjcf.com',
     '+.jzxs.com',
     '+.jzygczx.com',
+    '+.jzyhp.com',
     '+.jzyqyb.com',
     '+.jzyqzypg.com',
     '+.jzyx.com',
@@ -55028,6 +55061,7 @@ const fakeIpFilterSnapshots = {
     '+.kc-keycool.com',
     '+.kc0011.net',
     '+.kc87.com',
+    '+.kcallme.com',
     '+.kcbebank.com',
     '+.kccidc.com',
     '+.kccn.net',
@@ -55392,7 +55426,6 @@ const fakeIpFilterSnapshots = {
     '+.kfhome.com',
     '+.kfhty.com',
     '+.kfj.cc',
-    '+.kfjd.com',
     '+.kfjyd.com',
     '+.kfjyjt.com',
     '+.kflhgs.com',
@@ -55982,7 +56015,6 @@ const fakeIpFilterSnapshots = {
     '+.kopperchem.com',
     '+.koreabt.com',
     '+.koreavisa-wh.com',
-    '+.korirl.com',
     '+.kormee.com',
     '+.kornsweets.com',
     '+.koronsoft.com',
@@ -58877,6 +58909,7 @@ const fakeIpFilterSnapshots = {
     '+.linzihy.com',
     '+.lion1ou.tech',
     '+.lionaka.com',
+    '+.liongege.com',
     '+.lionit.net',
     '+.lionkingsoft.com',
     '+.lionmac.com',
@@ -59698,6 +59731,7 @@ const fakeIpFilterSnapshots = {
     '+.lookvin.com',
     '+.loome.net',
     '+.loonapp.com',
+    '+.loong1.com',
     '+.loong3d.com',
     '+.loongdriving.com',
     '+.loongnix.com',
@@ -59803,6 +59837,7 @@ const fakeIpFilterSnapshots = {
     '+.lovgiin.com',
     '+.lovol.com',
     '+.lovology.com',
+    '+.lowpowersemi.com',
     '+.loxpo.com',
     '+.loyalvalleycapital.com',
     '+.loyar.com',
@@ -60104,6 +60139,7 @@ const fakeIpFilterSnapshots = {
     '+.luckyair.net',
     '+.luckychipsmaster.com',
     '+.luckycoffee.com',
+    '+.luckycup.com',
     '+.luckyop.com',
     '+.luckyuyin.com',
     '+.luckyxp.net',
@@ -60519,6 +60555,7 @@ const fakeIpFilterSnapshots = {
     '+.lxtuyoo.com',
     '+.lxtuyoogame.com',
     '+.lxtuyou.com',
+    '+.lxtx777.com',
     '+.lxway.com',
     '+.lxway.net',
     '+.lxwlcn.com',
@@ -61898,6 +61935,7 @@ const fakeIpFilterSnapshots = {
     '+.me-city.com',
     '+.me-game.com',
     '+.me-tencent.com',
+    '+.me.news',
     '+.me1.ltd',
     '+.me360.com',
     '+.me361.com',
@@ -62712,6 +62750,7 @@ const fakeIpFilterSnapshots = {
     '+.microcardio.com',
     '+.microchampion.com',
     '+.microdiag.com',
+    '+.microdiode.com',
     '+.microdreams.com',
     '+.microfotos.com',
     '+.microfountain.com',
@@ -63841,6 +63880,7 @@ const fakeIpFilterSnapshots = {
     '+.moshengliang.com',
     '+.moshou.com',
     '+.moshuai.cc',
+    '+.moshuiai.com',
     '+.mosoga.net',
     '+.mossimo.net',
     '+.mossle.com',
@@ -63918,6 +63958,7 @@ const fakeIpFilterSnapshots = {
     '+.mozhan.com',
     '+.mozhedun.com',
     '+.mozhenhau.com',
+    '+.mozhenzhen.com',
     '+.mozichina.com',
     '+.mozigu.net',
     '+.mozillazg.com',
@@ -63983,7 +64024,6 @@ const fakeIpFilterSnapshots = {
     '+.mrjjxw.com',
     '+.mrlian.club',
     '+.mrlika.com',
-    '+.mrlxc51byo.com',
     '+.mrmfsc.ltd',
     '+.mro365.com',
     '+.mro9.com',
@@ -64972,6 +65012,7 @@ const fakeIpFilterSnapshots = {
     '+.nanningxiaoou.com',
     '+.nanningyouhua.com',
     '+.nannjlnk.com',
+    '+.nano-trix.com',
     '+.nanobody-biolab.com',
     '+.nanochrom.com',
     '+.nanoeast.net',
@@ -65782,6 +65823,7 @@ const fakeIpFilterSnapshots = {
     '+.nhzs.com',
     '+.ni8.com',
     '+.ni93.com',
+    '+.nia-teams.com',
     '+.nianchu.net',
     '+.nianhuawan.com',
     '+.niankawang.com',
@@ -66301,7 +66343,6 @@ const fakeIpFilterSnapshots = {
     '+.njnewgreen.com',
     '+.njnfwl.com',
     '+.njnhsx.net',
-    '+.njnhyx.net',
     '+.njnii.com',
     '+.njningyi.com',
     '+.njnkxt.com',
@@ -68144,6 +68185,7 @@ const fakeIpFilterSnapshots = {
     '+.opfibre.com',
     '+.opgw-oppc.com',
     '+.opinstallinit.com',
+    '+.opinstallres.com',
     '+.opjmw1.ren',
     '+.opkjh.com',
     '+.oplay.net',
@@ -69875,6 +69917,7 @@ const fakeIpFilterSnapshots = {
     '+.plob.org',
     '+.plopco.com',
     '+.plottersyservicioshdz.com',
+    '+.plovercrest.com',
     '+.plsbd.com',
     '+.plsdeyy.com',
     '+.plsfybjy.com',
@@ -69956,6 +69999,7 @@ const fakeIpFilterSnapshots = {
     '+.pnzpw.com',
     '+.pnzxyy.com',
     '+.po.co',
+    '+.po1c0tw4b2.com',
     '+.po7ryumvkx34.com',
     '+.pobaby.net',
     '+.pobasoft.com',
@@ -70262,6 +70306,7 @@ const fakeIpFilterSnapshots = {
     '+.ppwang.com',
     '+.ppwenda.com',
     '+.ppwfa.com',
+    '+.ppwfund.com',
     '+.ppwow.cc',
     '+.ppwwyyxx.com',
     '+.ppx520.com',
@@ -70755,7 +70800,6 @@ const fakeIpFilterSnapshots = {
     '+.pzfc.com',
     '+.pzfcw.com',
     '+.pzhccb.com',
-    '+.pzhdahe.com',
     '+.pzhedu.com',
     '+.pzhl.net',
     '+.pzhol.com',
@@ -70838,7 +70882,6 @@ const fakeIpFilterSnapshots = {
     '+.qc6.com',
     '+.qc99.com',
     '+.qca.org',
-    '+.qcaipiao.com',
     '+.qcbaas.com',
     '+.qcbone.com',
     '+.qcc.com',
@@ -71140,6 +71183,7 @@ const fakeIpFilterSnapshots = {
     '+.qh24.com',
     '+.qh4321.com',
     '+.qh6bc.com',
+    '+.qh7ptb6mc.com',
     '+.qhangyun.com',
     '+.qhass.org',
     '+.qhball.com',
@@ -71763,6 +71807,7 @@ const fakeIpFilterSnapshots = {
     '+.qingshuxuetang.com',
     '+.qingsongchou.com',
     '+.qingsongjituan.com',
+    '+.qingsongzhuan.online',
     '+.qingsonngxx.com',
     '+.qingstor.com',
     '+.qingtaoke.com',
@@ -72400,6 +72445,7 @@ const fakeIpFilterSnapshots = {
     '+.qqwmly.com',
     '+.qqwwr.com',
     '+.qqwys.net',
+    '+.qqx.me',
     '+.qqxmail.com',
     '+.qqxsnew.net',
     '+.qqxsnew5.com',
@@ -73042,6 +73088,7 @@ const fakeIpFilterSnapshots = {
     '+.quxds.com',
     '+.quxianchang.com',
     '+.quxiang.work',
+    '+.quxianzhan.com',
     '+.quxianzhuan.com',
     '+.quxiaxia.com',
     '+.quxingdong.com',
@@ -73970,6 +74017,7 @@ const fakeIpFilterSnapshots = {
     '+.resemi.com',
     '+.reservehemu.com',
     '+.resheji.com',
+    '+.reshg.com',
     '+.resistor.today',
     '+.resnics.com',
     '+.resona-wujl.com',
@@ -75214,6 +75262,7 @@ const fakeIpFilterSnapshots = {
     '+.sanabuy.com',
     '+.sanaemio.com',
     '+.sanan-e.com',
+    '+.sanan-semiconductor.com',
     '+.sananyiliao.com',
     '+.sanau.com',
     '+.sanbaiyun.com',
@@ -77951,6 +78000,7 @@ const fakeIpFilterSnapshots = {
     '+.shhyhy.com',
     '+.shhzcj.com',
     '+.shi-ming.com',
+    '+.shiabank.com',
     '+.shianzhixuan.com',
     '+.shibaili.com',
     '+.shibangchina.com',
@@ -78146,6 +78196,7 @@ const fakeIpFilterSnapshots = {
     '+.shirenzuojia.com',
     '+.shiritianchengtech.com',
     '+.shirongzhaoye.com',
+    '+.shirui3.com',
     '+.shisanzhi.com',
     '+.shiseidochina.com',
     '+.shishacharcoal.net',
@@ -78363,7 +78414,6 @@ const fakeIpFilterSnapshots = {
     '+.shootmedia.net',
     '+.shop-isv.com',
     '+.shop.globalsign.com',
-    '+.shop265.com',
     '+.shop2cn.com',
     '+.shopbackdrop.com',
     '+.shopchaoren.com',
@@ -78805,7 +78855,6 @@ const fakeIpFilterSnapshots = {
     '+.shujubang.com',
     '+.shujubo.com',
     '+.shujujishi.com',
-    '+.shujulin.com',
     '+.shujupie.com',
     '+.shujutang.com',
     '+.shujuwa.net',
@@ -79803,6 +79852,7 @@ const fakeIpFilterSnapshots = {
     '+.sjzqcrl.com',
     '+.sjzrbapp.com',
     '+.sjzrmyz.com',
+    '+.sjzsnncs.com',
     '+.sjzswtz.com',
     '+.sjzszz.com',
     '+.sjztd.com',
@@ -80103,6 +80153,7 @@ const fakeIpFilterSnapshots = {
     '+.smcec.com',
     '+.smcic.net',
     '+.smcsrj.com',
+    '+.smcyh.com',
     '+.smd-automation.com',
     '+.smd88.com',
     '+.smdcn.net',
@@ -81734,6 +81785,7 @@ const fakeIpFilterSnapshots = {
     '+.sunbowhospital.com',
     '+.sunboxsoft.com',
     '+.sunboyu.com',
+    '+.suncd.com',
     '+.suncereltd.com',
     '+.suncjm.com',
     '+.sundan.com',
@@ -83231,6 +83283,7 @@ const fakeIpFilterSnapshots = {
     '+.szpowerfly.com',
     '+.szpra.com',
     '+.szprl.com',
+    '+.szpro360.com',
     '+.szptxx.com',
     '+.szputy.com',
     '+.szqf.org',
@@ -84678,6 +84731,7 @@ const fakeIpFilterSnapshots = {
     '+.tencentdb.com',
     '+.tencentddos.com',
     '+.tencentdevices.com',
+    '+.tencentdi.com',
     '+.tencentdigitalassistant.com',
     '+.tencentdmp.com',
     '+.tencentdms.com',
@@ -85827,6 +85881,7 @@ const fakeIpFilterSnapshots = {
     '+.tjqq.cc',
     '+.tjrenliziyuan.com',
     '+.tjrenmu.com',
+    '+.tjrywlkj.online',
     '+.tjrzzl.com',
     '+.tjship.com',
     '+.tjsjnxh.com',
@@ -86057,6 +86112,7 @@ const fakeIpFilterSnapshots = {
     '+.tmjj.com',
     '+.tmjob88.com',
     '+.tmkoo.com',
+    '+.tmlyun.com',
     '+.tmoxrobot.com',
     '+.tmqd.me',
     '+.tmqmqj.com',
@@ -86167,6 +86223,7 @@ const fakeIpFilterSnapshots = {
     '+.tokenglish.com',
     '+.tokenrhythm.studio',
     '+.tokensky.net',
+    '+.tokentracker.cc',
     '+.tokimekiclub.org',
     '+.tol24.com',
     '+.tom.com',
@@ -86692,6 +86749,7 @@ const fakeIpFilterSnapshots = {
     '+.tracyclass.com',
     '+.tradaquan.com',
     '+.tradeblazer.net',
+    '+.tradeflow.chat',
     '+.tradeleo.com',
     '+.trademanager.com',
     '+.trademessenger.com',
@@ -87397,6 +87455,8 @@ const fakeIpFilterSnapshots = {
     '+.tushumi.cc',
     '+.tushumi.com',
     '+.tushuokeji.net',
+    '+.tusiart.com',
+    '+.tusiassets.com',
     '+.tusij.com',
     '+.tusiot.com',
     '+.tusmedicine.com',
@@ -87666,6 +87726,7 @@ const fakeIpFilterSnapshots = {
     '+.tydns.cc',
     '+.tyduanju.com',
     '+.tyeat.com',
+    '+.tyedo.com',
     '+.tyeec.net',
     '+.tyepi.com',
     '+.tyfo.com',
@@ -89287,6 +89348,7 @@ const fakeIpFilterSnapshots = {
     '+.vip120.com',
     '+.vip1280.net',
     '+.vip150.com',
+    '+.vip166.com',
     '+.vip3659k.com',
     '+.vip7337.com',
     '+.vip7787.com',
@@ -90048,6 +90110,7 @@ const fakeIpFilterSnapshots = {
     '+.wagen.cc',
     '+.waha.cc',
     '+.wahahakid.org',
+    '+.wahbouproduct.com',
     '+.waheaven.com',
     '+.wahlap.com',
     '+.wahlap.net',
@@ -90791,6 +90854,7 @@ const fakeIpFilterSnapshots = {
     '+.webankwyd.com',
     '+.webarcx.com',
     '+.webcamx666.com',
+    '+.webclose-whatsapp.com',
     '+.webdissector.com',
     '+.webetter-ad.com',
     '+.webfalse.com',
@@ -91347,6 +91411,7 @@ const fakeIpFilterSnapshots = {
     '+.wendougee.com',
     '+.wendu.com',
     '+.wenduedu.com',
+    '+.wenduoduo.com',
     '+.wenfangcn.com',
     '+.wenfangjushe.com',
     '+.wenfangnet.com',
@@ -91825,6 +91890,7 @@ const fakeIpFilterSnapshots = {
     '+.whidf.com',
     '+.whidy.net',
     '+.whiie-expo.com',
+    '+.whinbrook.com',
     '+.whinfo.net',
     '+.whir.net',
     '+.whisperto.net',
@@ -93566,7 +93632,6 @@ const fakeIpFilterSnapshots = {
     '+.wwejds.com',
     '+.wwenglish.com',
     '+.wwenglish.org',
-    '+.wwentua.com',
     '+.wwfchina.org',
     '+.wwhlian.com',
     '+.wwjie.com',
@@ -95839,6 +95904,7 @@ const fakeIpFilterSnapshots = {
     '+.xingyunb.com',
     '+.xingyunba.com',
     '+.xingyungroup.com',
+    '+.xingyunka.com',
     '+.xingyunol.com',
     '+.xingyusoft.net',
     '+.xingyutc.com',
@@ -96889,6 +96955,7 @@ const fakeIpFilterSnapshots = {
     '+.xn--nyqy26a',
     '+.xn--omrvgz6er31au6f.com',
     '+.xn--otu796d',
+    '+.xn--p3tw43cwvb.com',
     '+.xn--p5t28ylet56a.com',
     '+.xn--pss89e6xl72g.com',
     '+.xn--ptua509t.com',
@@ -97358,6 +97425,7 @@ const fakeIpFilterSnapshots = {
     '+.xuebaclass.com',
     '+.xuebaike.net',
     '+.xuebangsoft.com',
+    '+.xuebasou.com',
     '+.xuebawang.net',
     '+.xuecaijie.com',
     '+.xuecan.net',
@@ -97432,6 +97500,7 @@ const fakeIpFilterSnapshots = {
     '+.xueshu5.com',
     '+.xueshuda.com',
     '+.xueshut.com',
+    '+.xueshuweishi.com',
     '+.xueshuwenhai.com',
     '+.xuesongshuwood.com',
     '+.xuesw.com',
@@ -97824,6 +97893,7 @@ const fakeIpFilterSnapshots = {
     '+.xxxmeng.com',
     '+.xxxxxx6.com',
     '+.xxxzzlm.org',
+    '+.xxy-nirvana.com',
     '+.xxy5hi7j.lol',
     '+.xxycw.com',
     '+.xxyeyan.com',
@@ -98649,6 +98719,7 @@ const fakeIpFilterSnapshots = {
     '+.yaypool.com',
     '+.yayu.net',
     '+.yayunjiqi.com',
+    '+.yazhijian.com',
     '+.yazhongzhuangshi.com',
     '+.yazuo.com',
     '+.yazx.net',
@@ -100851,6 +100922,7 @@ const fakeIpFilterSnapshots = {
     '+.yoozhe.com',
     '+.yoozhibo.net',
     '+.yoozoo.com',
+    '+.yoplay.hk',
     '+.yopoint.cc',
     '+.yopoint.com',
     '+.yoptech.com',
@@ -103143,6 +103215,7 @@ const fakeIpFilterSnapshots = {
     '+.zanig.com',
     '+.zanih.com',
     '+.zankee1955.com',
+    '+.zanpc.com',
     '+.zanpic.com',
     '+.zanpu.com',
     '+.zantainet.com',
@@ -103269,6 +103342,7 @@ const fakeIpFilterSnapshots = {
     '+.zbwbbs.com',
     '+.zbwdj.com',
     '+.zbwg.cc',
+    '+.zbwhmedia.com',
     '+.zbwmy.com',
     '+.zbwpay.com',
     '+.zbxcck.com',
@@ -103782,6 +103856,7 @@ const fakeIpFilterSnapshots = {
     '+.zglww.net',
     '+.zglxw.com',
     '+.zglyrc.com',
+    '+.zglyun.com',
     '+.zglyz.com',
     '+.zgmba.com',
     '+.zgmcxw.com',
@@ -104424,7 +104499,6 @@ const fakeIpFilterSnapshots = {
     '+.zhhaitai.com',
     '+.zhheo.com',
     '+.zhhfedu.com',
-    '+.zhhlaw.com',
     '+.zhhlogistics.com',
     '+.zhhrm.com',
     '+.zhhs-china.com',
@@ -104594,6 +104668,7 @@ const fakeIpFilterSnapshots = {
     '+.zhiliaocaibao.com',
     '+.zhiliaoke.com',
     '+.zhilidata.com',
+    '+.zhiling.pw',
     '+.zhilingshidai.com',
     '+.zhilingshop.com',
     '+.zhilitraffic.com',
@@ -107083,6 +107158,7 @@ const fakeIpFilterSnapshots = {
     '+.zuiyou.com',
     '+.zuiyouxi.com',
     '+.zuizhifu.com',
+    '+.zuizhinan.com',
     '+.zuji360.com',
     '+.zujiant.com',
     '+.zujingpai.com',
@@ -107457,6 +107533,7 @@ const fakeIpFilterSnapshots = {
     '+.zyou100.com',
     '+.zyoulun.com',
     '+.zypharm.com',
+    '+.zypiaojia.com',
     '+.zyplayer.com',
     '+.zyq.today',
     '+.zyq366.com',
@@ -107673,7 +107750,6 @@ const fakeIpFilterSnapshots = {
     '+.zzwonder.com',
     '+.zzwqqx.com',
     '+.zzwro.com',
-    '+.zzwtjx.com',
     '+.zzwwiidd.com',
     '+.zzwzj.com',
     '+.zzxca.com',
@@ -107802,14 +107878,9 @@ const excludeFilter =
   /群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|选择|剩余|公益|发布|DIZTNA|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|过滤|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b/iu;
 
 // 屏蔽代理QUIC流量
-// 子规则块按域名/IP 规则集放行国内 QUIC；PASS 返回主规则链继续服务分流。
-// 其余 UDP 443 流量由子规则块拒绝。
-const blockForeignQuic = ['SUB-RULE,meow-quic'];
-const meowQuicRules = [
-  'NOT,((AND,((NETWORK,UDP),(DST-PORT,443)))),PASS',
-  'RULE-SET,cn,PASS',
-  'RULE-SET,cn_ip,PASS,no-resolve',
-  'AND,((NETWORK,UDP),(DST-PORT,443)),REJECT',
+// Nightly 支持在逻辑规则内嵌套 RULE-SET：放行 cn 域名及已知的国内/私有 IP，其余 UDP 443 直接拒绝。
+const blockForeignQuic = [
+  'AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn),(RULE-SET,cn_ip,no-resolve),(RULE-SET,private_ip,no-resolve)))))),REJECT',
 ];
 
 // 直连节点
@@ -108330,12 +108401,7 @@ const serviceConfigs = [
       },
     },
     icon: `${iconBaseUrl}Emby.svg`,
-    rules: [
-      'RULE-SET,emby,Emby',
-      'DOMAIN-SUFFIX,mb3admin.com,Emby',
-      'DOMAIN-SUFFIX,nubebelle.com,Emby',
-      'DOMAIN-KEYWORD,emby,Emby',
-    ],
+    rules: ['RULE-SET,emby,Emby'],
   },
   {
     name: 'PikPak',
@@ -108432,6 +108498,7 @@ const serviceConfigs = [
     name: 'AdBlock',
     baseOption: selectBaseOption,
     reject: true,
+    priority: true,
     providers: {
       'category-ads': {
         ...ruleProviderCommonDomain,
@@ -108580,8 +108647,26 @@ function filterAndNormalizeProxies(config) {
     throw new Error('配置文件中未找到任何代理节点，请使用机场提供的配置文件进行覆写');
   }
 
-  // 节点统一遵循全局 IPv6 设置，输出时剔除逐节点 ip-version 字段。
-  return filteredProxies.map(({ 'ip-version': ignored, ...proxy }) => proxy);
+  // Nightly 原生支持逐节点 ip-version；开启 IPv6 时保留合法值，纯 IPv4 模式剔除 IPv6 偏好。
+  return filteredProxies.map(sanitizeProxyIpVersion);
+}
+
+const validIpVersionsIpv4 = new Set(['dual', 'ipv4', 'ipv4-prefer']);
+const validIpVersionsIpv6 = new Set(['dual', 'ipv4', 'ipv4-prefer', 'ipv6', 'ipv6-prefer']);
+
+/**
+ * 保留 Meow nightly 支持的逐节点 ip-version，并在关闭全局 IPv6 时剥离仅 IPv6 相关设置。
+ */
+function sanitizeProxyIpVersion(proxy) {
+  const raw = proxy['ip-version'];
+  if (raw === undefined) return proxy;
+  const normalized = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+  const allowed = meowOptions.ipv6 ? validIpVersionsIpv6 : validIpVersionsIpv4;
+  if (allowed.has(normalized)) {
+    return normalized === raw ? proxy : { ...proxy, 'ip-version': normalized };
+  }
+  const { 'ip-version': ignored, ...rest } = proxy;
+  return rest;
 }
 
 // ---构建地区组和倍率组---
@@ -108597,16 +108682,16 @@ function createRegionGroup(name, icon, proxies) {
     const urlTestName = `${name}-自动选择`;
     return [
       {
-        ...urlTestBaseOption,
-        name: urlTestName,
-        proxies,
-      },
-      {
         ...selectBaseOption,
         name,
         icon,
         proxies: [...proxies, urlTestName],
         hidden: hideManualSelectGroupEnabled,
+      },
+      {
+        ...urlTestBaseOption,
+        name: urlTestName,
+        proxies,
       },
     ];
   }
@@ -108682,7 +108767,7 @@ function buildCustomizeGroups(filteredProxies, customizeList = customizeProxies)
   const customProxies = [];
 
   for (const proxy of customizeList) {
-    const { 'ip-version': ignored, ...normalized } = normalizeProxyName(proxy);
+    const normalized = sanitizeProxyIpVersion(normalizeProxyName(proxy));
     let name = normalized.name;
     while (usedNames.has(name)) {
       name = normalizeProxyName({ name: `${customPrefix}${name}` }).name.replace(`${customPrefix} `, customPrefix);
@@ -108726,8 +108811,9 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
   const functionalGroups = [];
   const functionalRules = [];
   const functionalIpRules = [];
-  const priorityServices = serviceConfigs.filter((svc) => svc.beforeQuic && ruleOptionsEnable[svc.name]);
-  const priorityRules = priorityServices.flatMap((svc) =>
+  const priorityRules = [];
+  const beforeQuicServices = serviceConfigs.filter((svc) => svc.beforeQuic && ruleOptionsEnable[svc.name]);
+  const beforeQuicRules = beforeQuicServices.flatMap((svc) =>
     (svc.rules || []).map((rule) =>
       minimalModeEnabled ? rule.replace(new RegExp(`,${svc.name}$`), ',默认代理') : rule,
     ),
@@ -108754,8 +108840,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
   if (minimalModeEnabled) {
     const autoSelectGroupEnabled = ruleOptionsEnable.自动选择;
 
-    const finalRuleProviders = { ...baseRuleProviders };
-    for (const svc of priorityServices) Object.assign(finalRuleProviders, svc.providers || {});
+    for (const svc of beforeQuicServices) Object.assign(finalRuleProviders, svc.providers || {});
 
     const defaultGroup = {
       ...selectBaseOption,
@@ -108796,6 +108881,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
       functionalRules: [],
       functionalIpRules: [],
       priorityRules,
+      beforeQuicRules,
       finalRuleProviders,
       chainGroup,
       directGroup,
@@ -108811,14 +108897,11 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
     icon: `${iconBaseUrl}Proxy.svg`,
   });
 
-  const orderedServiceConfigs = [
-    ...serviceConfigs.filter((svc) => svc.name === 'AdBlock'),
-    ...serviceConfigs.filter((svc) => svc.name !== 'AdBlock'),
-  ];
-  for (const svc of orderedServiceConfigs) {
+  for (const svc of serviceConfigs) {
     if (!ruleOptionsEnable[svc.name]) continue;
 
-    if (!svc.beforeQuic) functionalRules.push(...(svc.rules || []));
+    if (svc.priority) priorityRules.push(...(svc.rules || []));
+    else if (!svc.beforeQuic) functionalRules.push(...(svc.rules || []));
     functionalIpRules.push(...(svc.ipRules || []));
     Object.assign(finalRuleProviders, svc.providers || {});
   }
@@ -108891,6 +108974,7 @@ function buildFunctionalGroups(filteredProxies, generatedRegionGroups, customize
     functionalRules,
     functionalIpRules,
     priorityRules,
+    beforeQuicRules,
     finalRuleProviders,
     chainGroup,
     directGroup,
@@ -109305,11 +109389,38 @@ function applyHostsToProxies(proxies, hosts) {
 }
 
 /**
- * 规范化订阅中的 DNS 地址：UDP/TCP 的 direct 或直连标记统一为 #DIRECT；
- * 节点解析剥离 ?proxy= 及其他代理路由标记，避免依赖尚未建立的代理；system 使用 localDNS。
+ * 将订阅的 DNS 标量或列表规范化，忽略空白和非地址值。
+ */
+function normalizeDnsList(value) {
+  const entries = Array.isArray(value) ? value : [value];
+  return entries
+    .filter((entry) => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function isOwnDnsListener(server, listen) {
+  if (typeof listen !== 'string') return false;
+  const address = /^(?:(?:udp|tcp):\/\/)?(\[[^\]]+\]|[^:/?#]+)(?::(\d+))?(?:#.*)?$/i;
+  const bound = listen.trim().match(address);
+  const upstream = server.match(address);
+  if (!bound || !upstream || Number(bound[2] || 53) !== Number(upstream[2] || 53)) return false;
+
+  const boundHost = normalizeDomain(bound[1]);
+  const upstreamHost = normalizeDomain(upstream[1]);
+  return (
+    boundHost === upstreamHost ||
+    (boundHost === '0.0.0.0' && /^(?:127(?:\.\d{1,3}){3}|localhost)$/.test(upstreamHost)) ||
+    (boundHost === '[::]' && (upstreamHost === '[::1]' || upstreamHost === 'localhost'))
+  );
+}
+
+/**
+ * 节点解析剥离代理路由标记，保留加密 DNS 的 SNI。普通策略可以用 #DIRECT，独立节点策略使用无标记地址。
  */
 function stripDnsSuffix(dns) {
-  const str = String(dns).trim();
+  if (typeof dns !== 'string') return '';
+  const str = dns.trim();
   const hashIndex = str.indexOf('#');
   let prefix = (hashIndex === -1 ? str : str.slice(0, hashIndex)).trim();
   if (prefix === 'system' || prefix === 'system://') return meowOptions.localDNS[0];
@@ -109340,26 +109451,18 @@ function isIpAddress(server) {
 }
 
 /**
- * 构建 DNS 与 hosts：保留私有 DNS、节点域名 policy/fake-ip-filter，并按 hosts 改写节点 server
- * hosts改写条件（满足任意一个条件即可）：
- * 1. proxy-server-nameserver 有且仅有一个 DNS 并且该 DNS 包含非空的 listen 值
- * 2. proxy-server-nameserver 有且仅有一个 DNS 并且该 DNS 包含 127.0.0.1 并且 listen 包含 0.0.0.0
+ * 保留机场私有 DNS 和节点域名策略。订阅没有可用的专用 DNS 或仅指向自身监听时，按 hosts 改写节点地址。
  */
-function buildDnsAndHostsConfig(config, filteredProxies) {
+function buildDnsAndHostsConfig(config, filteredProxies, customProxies = []) {
   const minimalModeEnabled = ruleOptionsEnable.极简国内外分流模式;
 
   const originalDnsConfig = config.dns || {};
-
-  const proxyServerNameservers = originalDnsConfig['proxy-server-nameserver'] || [];
+  const proxyServerNameservers = normalizeDnsList(originalDnsConfig['proxy-server-nameserver']);
   const listenValue = originalDnsConfig['listen'];
 
   const shouldRewriteByHosts =
-    proxyServerNameservers.length === 1 &&
-    typeof listenValue === 'string' &&
-    listenValue.length > 0 &&
-    (proxyServerNameservers.some((dns) => String(dns).toLowerCase().includes(listenValue.toLowerCase())) ||
-      (listenValue.includes('0.0.0.0') &&
-        proxyServerNameservers.some((dns) => String(dns).toLowerCase().includes('127.0.0.1'))));
+    proxyServerNameservers.length === 0 ||
+    (proxyServerNameservers.length === 1 && isOwnDnsListener(proxyServerNameservers[0], listenValue));
 
   const mappedProxies = shouldRewriteByHosts ? applyHostsToProxies(filteredProxies, config.hosts) : filteredProxies;
 
@@ -109383,7 +109486,7 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
 
   const privateDNS = [
     ...new Set(
-      [...(originalDnsConfig['nameserver'] || []), ...privateProxyServerNameservers]
+      [...normalizeDnsList(originalDnsConfig['nameserver']), ...privateProxyServerNameservers]
         .map(stripDnsSuffix)
         .filter((dns) => dns.length > 0 && !isCommonDns(dns)),
     ),
@@ -109421,6 +109524,13 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
     const matched = findProxyPolicies[1](domain) || findProxyPolicies[0](domain);
     nodeDnsPolicy[domain] = matched ? matched[1] : defaultProxyDNS;
   }
+  // 自建节点也进入首个域名策略块，且只有机场节点可以沿用订阅的 hosts 改写和专用 DNS。
+  for (const proxy of customProxies) {
+    const domain = normalizeDomain(proxy.server);
+    if (!domain || isIpAddress(domain) || proxyDomains.has(domain)) continue;
+    proxyDomains.add(domain);
+    nodeDnsPolicy[domain] = proxyServerDNS;
+  }
 
   const originalFakeIpFilter = originalDnsConfig['fake-ip-filter'] || [];
   const proxyFakeIpFilter = originalFakeIpFilter
@@ -109432,12 +109542,25 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
       return !suffix.includes('*') && !pattern.includes(':') && matchProxyDomain(pattern);
     });
 
+  // 独立节点解析器拒绝无法独立引导的代理标记；无标记地址仍由内核直连。
+  const untag = (server) => server.replace(/#DIRECT$/, '');
+  const fakeIpRange6 = originalDnsConfig['fake-ip-range6'];
+  const useSystemHosts = originalDnsConfig['use-system-hosts'];
+  const policyExclusive = originalDnsConfig['nameserver-policy-exclusive'];
+
   const dns = {
     enable: true,
     listen: '127.0.0.1:1053',
     'use-hosts': true,
+    'use-system-hosts': typeof useSystemHosts === 'boolean' ? useSystemHosts : true,
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/15',
+    ...(meowOptions.ipv6
+      ? {
+          'fake-ip-range6':
+            typeof fakeIpRange6 === 'string' && fakeIpRange6.trim() ? fakeIpRange6.trim() : 'fdfe:dcba:9877::/64',
+        }
+      : {}),
     'store-fake-ip': true, // 持久化 Fake-IP 映射
     // 排除列表使用域名快照，并追加实际节点域名；这里不接受 rule-set 引用。
     'fake-ip-filter': [
@@ -109451,9 +109574,21 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
       ]),
     ],
     'default-nameserver': defaultDNS,
+    'proxy-server-nameserver': proxyServerDNS,
+    ...(proxyDomains.size > 0
+      ? {
+          'proxy-server-nameserver-policy': Object.fromEntries(
+            Object.entries(nodeDnsPolicy).map(([domain, servers]) => [
+              domain,
+              Array.isArray(servers) ? servers.map(untag) : untag(servers),
+            ]),
+          ),
+        }
+      : {}),
     nameserver: foreignDNS,
     'direct-nameserver': chinaDNS,
     'direct-nameserver-follow-policy': true,
+    'nameserver-policy-exclusive': typeof policyExclusive === 'boolean' ? policyExclusive : true,
     'nameserver-policy': {
       // 连续域名键组成一个优先匹配块；节点策略必须位于所有 rule-set 之前。
       '+.ctaiot.com': chinaDNS,
@@ -109484,6 +109619,80 @@ function buildDnsAndHostsConfig(config, filteredProxies) {
 
 // --- 主入口 ---
 
+const supportedTunStacks = new Set(['system', 'mixed', 'lwip']);
+const supportedSniffProtocols = new Map([
+  ['tls', 'TLS'],
+  ['http', 'HTTP'],
+  ['quic', 'QUIC'],
+]);
+
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * 清理并构建 TUN 配置，仅保留 Meow nightly 支持的字段与栈类型。
+ */
+function buildTunConfig(rawTun) {
+  const tun = {};
+  for (const key of [
+    'enable',
+    'device',
+    'mtu',
+    'inet4-address',
+    'inet6-address',
+    'auto-route',
+    'outbound-interface',
+    'dns-hijack',
+    'udp-timeout',
+  ]) {
+    if (isPlainObject(rawTun) && Object.prototype.hasOwnProperty.call(rawTun, key)) tun[key] = rawTun[key];
+  }
+  const rawStack = meowOptions.tunStack !== null ? meowOptions.tunStack : rawTun?.stack;
+  if (typeof rawStack === 'string') {
+    const normalizedStack = rawStack.trim().toLowerCase();
+    if (supportedTunStacks.has(normalizedStack)) tun['stack'] = normalizedStack;
+  }
+  if (meowOptions.tunAutoRoute !== null) tun['auto-route'] = meowOptions.tunAutoRoute;
+  const globalRoute = tun['auto-route'] === undefined || tun['auto-route'] === true || tun['auto-route'] === 'global';
+  if (meowOptions.ipv6 && globalRoute && !tun['inet6-address']) {
+    tun['inet6-address'] = 'fdfe:dcba:9876::1/126';
+  }
+  return tun;
+}
+
+/**
+ * 按 Meow nightly sniffer 约束过滤协议与字段，避免未知或已废弃选项产生警告或失败。
+ */
+function sanitizeSnifferConfig(rawSniffer) {
+  if (!isPlainObject(rawSniffer)) return null;
+  const sniffer = {};
+  for (const key of ['enable', 'parse-pure-ip', 'override-destination']) {
+    if (typeof rawSniffer[key] === 'boolean') sniffer[key] = rawSniffer[key];
+  }
+  if (Number.isInteger(rawSniffer.timeout) && rawSniffer.timeout >= 1 && rawSniffer.timeout <= 60000) {
+    sniffer['timeout'] = rawSniffer.timeout;
+  }
+  for (const key of ['skip-domain', 'force-domain']) {
+    if (Array.isArray(rawSniffer[key])) {
+      const list = rawSniffer[key].filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim());
+      if (list.length) sniffer[key] = list;
+    }
+  }
+  if (isPlainObject(rawSniffer.sniff)) {
+    const sniff = {};
+    for (const [proto, cfg] of Object.entries(rawSniffer.sniff)) {
+      const canonical = supportedSniffProtocols.get(proto.trim().toLowerCase());
+      if (canonical && isPlainObject(cfg) && cfg.ports !== undefined) {
+        sniff[canonical] = { ports: cfg.ports };
+      }
+    }
+    if (Object.keys(sniff).length) sniffer['sniff'] = sniff;
+  }
+  if (sniffer.enable === true && !sniffer.sniff) return null;
+  return Object.keys(sniffer).length ? sniffer : null;
+}
+
 /**
  * 主入口：覆写机场订阅配置，生成 Meow 配置。
  */
@@ -109508,30 +109717,13 @@ function main(config) {
     functionalRules,
     functionalIpRules,
     priorityRules,
+    beforeQuicRules,
     finalRuleProviders,
     chainGroup,
     directGroup,
   } = buildFunctionalGroups(filteredProxies, generatedRegionGroups, { customProxyNames, customGroup });
 
-  const { dns, hosts, proxies: mappedProxies } = buildDnsAndHostsConfig(config, filteredProxies);
-
-  // 自建节点也必须能在代理建立之前解析，避免主 DNS 经默认代理形成循环。
-  // 不使用订阅的私有 DNS / hosts 改写自建节点。
-  for (const proxy of customProxies) {
-    if (typeof proxy.server !== 'string') continue;
-    const domain = normalizeDomain(proxy.server);
-    if (!domain || isIpAddress(domain)) continue;
-    if (!Object.prototype.hasOwnProperty.call(dns['nameserver-policy'], domain)) {
-      dns['nameserver-policy'][domain] = proxyServerDNS;
-    }
-    if (!dns['fake-ip-filter'].includes(domain)) dns['fake-ip-filter'].push(domain);
-  }
-  // 自建节点同样移入首个域名块，避免被前面的规则集 DNS 策略遮蔽。
-  const dnsPolicies = Object.entries(dns['nameserver-policy']);
-  dns['nameserver-policy'] = {
-    ...Object.fromEntries(dnsPolicies.filter(([key]) => !key.includes(':'))),
-    ...Object.fromEntries(dnsPolicies.filter(([key]) => key.includes(':'))),
-  };
+  const { dns, hosts, proxies: mappedProxies } = buildDnsAndHostsConfig(config, filteredProxies, customProxies);
 
   newConfig['dns'] = dns;
   newConfig['hosts'] = hosts;
@@ -109539,47 +109731,37 @@ function main(config) {
   newConfig['allow-lan'] = true;
   newConfig['ipv6'] = meowOptions.ipv6;
   newConfig['mode'] = 'rule';
+  newConfig['unified-delay'] = typeof config['unified-delay'] === 'boolean' ? config['unified-delay'] : true;
   newConfig['tcp-connect-timeout'] = meowOptions.directConnectTimeout;
   newConfig['log-level'] = 'info';
   newConfig['bind-address'] = '*';
 
   newConfig['external-controller'] = '127.0.0.1:9090';
 
-  // Meow 0.29 新选项按输入显式继承，空闲回收和统计开关由用户选择。
-  for (const key of [
-    'traffic-ledger',
-    'tcp-keepalive',
-    'tcp-keepalive-idle',
-    'tcp-keepalive-interval',
-    'tcp-keepalive-probes',
-    'tcp-idle-timeout',
-  ]) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) newConfig[key] = config[key];
+  // 继承 Meow nightly 支持的运行期、拨号与连接选项。
+  for (const key of ['traffic-ledger', 'tcp-keepalive', 'connection-notes']) {
+    if (typeof config[key] === 'boolean') newConfig[key] = config[key];
+  }
+  for (const key of ['tcp-keepalive-idle', 'tcp-keepalive-interval', 'tcp-keepalive-probes', 'tcp-idle-timeout']) {
+    if (typeof config[key] === 'number' && Number.isFinite(config[key])) newConfig[key] = config[key];
+  }
+  for (const key of ['max-connections', 'routing-mark']) {
+    if (Number.isInteger(config[key]) && config[key] > 0) newConfig[key] = config[key];
+  }
+  for (const key of ['global-client-fingerprint', 'global-ua', 'interface-name']) {
+    if (typeof config[key] === 'string' && config[key].trim()) newConfig[key] = config[key].trim();
+  }
+  if (isPlainObject(config.logbook) && typeof config.logbook.enable === 'boolean') {
+    newConfig['logbook'] = { enable: config.logbook.enable };
   }
 
-  // TUN 启用状态和路由方式按输入配置继承，仅保留内核支持的字段。
-  if (config.tun || meowOptions.tunAutoRoute !== null) {
-    const tun = {};
-    for (const key of [
-      'enable',
-      'device',
-      'mtu',
-      'inet4-address',
-      'inet6-address',
-      'auto-route',
-      'outbound-interface',
-      'dns-hijack',
-      'udp-timeout',
-    ]) {
-      if (config.tun && Object.prototype.hasOwnProperty.call(config.tun, key)) tun[key] = config.tun[key];
-    }
-    if (meowOptions.tunAutoRoute !== null) tun['auto-route'] = meowOptions.tunAutoRoute;
-    const globalRoute = tun['auto-route'] === undefined || tun['auto-route'] === true || tun['auto-route'] === 'global';
-    if (meowOptions.ipv6 && globalRoute && !tun['inet6-address']) {
-      tun['inet6-address'] = 'fdfe:dcba:9876::1/126';
-    }
-    newConfig.tun = tun;
+  // TUN 启用状态、协议栈和路由方式按输入配置与静态选项合并，仅保留内核支持字段。
+  if (config.tun || meowOptions.tunAutoRoute !== null || meowOptions.tunStack !== null) {
+    newConfig['tun'] = buildTunConfig(config.tun);
   }
+
+  const sniffer = sanitizeSnifferConfig(config.sniffer);
+  if (sniffer) newConfig['sniffer'] = sniffer;
 
   newConfig['proxies'] = [...mappedProxies, ...customProxies];
   newConfig['proxy-groups'] = [
@@ -109591,21 +109773,17 @@ function main(config) {
     ...generatedRegionGroups,
   ];
   newConfig['rule-providers'] = finalRuleProviders;
-  if (ruleOptionsEnable.屏蔽代理QUIC流量) {
-    newConfig['sub-rules'] = { 'meow-quic': meowQuicRules };
-  }
 
   newConfig['rules'] = [
-    ...prefixRules,
     ...priorityRules,
+    ...prefixRules,
+    ...beforeQuicRules,
     ...(ruleOptionsEnable.屏蔽代理QUIC流量 ? blockForeignQuic : []),
     ...functionalRules,
     'RULE-SET,geolocation-!cn,默认代理',
-    ...functionalIpRules,
-
-    // 兜底规则
     'RULE-SET,cn_ip,直连',
     'RULE-SET,private_ip,直连',
+    ...functionalIpRules,
     `MATCH,${ruleOptionsEnable.极简国内外分流模式 ? '默认代理' : '漏网之鱼'}`,
   ];
 

@@ -5,7 +5,7 @@
 #  Meow 配置链接：https://raw.githubusercontent.com/TheSixPasserby/MyClash/main/Config/MeowConfigLite.yaml
 #  ---------------------
 
-# 适用内核：meow 0.29.0 或更新版本。
+# 适用内核：Meow nightly（v0.29.0-alpha+23cf184 或更新版本）。
 # 使用前填写 provider1.url；新增订阅时复制 provider1 并修改名称、url 和 path。
 # 这是独立配置，不要再叠加当前 MeowScript.js 覆写（该脚本拒绝 proxy-providers 输入）。
 # provider 使用含 proxies 节点列表的明文 YAML 订阅；内核不解密 age 订阅或添加节点名前缀。
@@ -17,31 +17,23 @@
 # DIRECT 使用 direct-nameserver，并跟随 nameserver-policy 保留局域网和节点专用 DNS。
 # nameserver-policy 中 private 的 192.168.1.1 是当前局域网 DNS；换网络后按实际内网 DNS 修改。
 # provider 节点域名通过 proxy-server-nameserver 独立解析，避免与代理 DNS 互相依赖。
-# Fake-IP 排除列表使用 2026-11-08 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
+# Fake-IP 排除列表使用 2026-11-18 的 bett-rules 域名快照，随配置文件更新。远程路由规则集独立在线更新。
 # Discord 原生语音需全局 TUN（auto-route: true/global）和支持 UDP 的节点；系统 HTTP 代理不接管语音 UDP。
 # 浏览器直接 IP 的 WebRTC 流量无法凭域名精确识别，见 README 的使用说明。
 # 策略组首项作为初始选择；已保存的选择由内核管理。
 
 # --- 锚点定义 (通用属性) ---
-proxy_providers_common:
-  &proxy_providers_common {
-    type: http,
-    interval: 86400,
-    proxy: DIRECT,
-    exclude-type: 'DIRECT|REJECT|REMATCH',
-    health-check: { enable: false, url: https://www.apple.com/library/test/success.html },
-  }
-
 # 全局过滤节点
-global_exclude_filter:
-  &global_exclude_filter {
-    exclude-filter: '(?i)(群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|电报|频道|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|选择|剩余|公益|发布|DIZTNA|通路|登录|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|过滤|⚠️|@|t\.me/\+|\bexpire\b|\bhttps?://|\.com|\btraffic\b)',
-  }
-
-# 订阅提供者不重复测速；由策略组每 600 秒探测。新版 Alpha 也会调度 provider health-check，故此处关闭。
+# 订阅提供者不开启周期测速，仅由策略组每 600 秒探测；省略 health-check 避免触发 Nightly 禁用提示。
 proxy-providers:
   provider1:
-    <<: [*proxy_providers_common, *global_exclude_filter]
+    <<:
+      [
+        &proxy_providers_common { type: http, interval: 86400, proxy: DIRECT, exclude-type: 'DIRECT|REJECT|REMATCH' },
+        &global_exclude_filter {
+          exclude-filter: '(?i)(群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|电报|频道|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|选择|剩余|公益|发布|DIZTNA|通路|登录|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|过滤|⚠️|@|t\.me/\+|\bexpire\b|\bhttps?://|\.com|\btraffic\b)',
+        },
+      ]
     url: '' # 此处单引号中间填入机场订阅链接
     path: ./proxy_provider/provider1.yaml
 
@@ -61,160 +53,28 @@ mixed-port: 7890
 allow-lan: true
 ipv6: false
 mode: rule
+unified-delay: true
 log-level: info
 tcp-connect-timeout: 2
 bind-address: '*'
 external-controller: '127.0.0.1:9090'
 
-# 国内外 DNS 定义
-dns_common:
-  chinaDNS: &chinaDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
-  foreignDNS:
-    &foreignDNS ['https://cloudflare-dns.com/dns-query?proxy=默认代理', 'https://dns.google/dns-query?proxy=默认代理']
-  defaultDNS: &defaultDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
-  proxyServerDNS: &proxyServerDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
+# 以下字段由 Meow nightly 原生支持，按需取消注释启用。
+# global-client-fingerprint: chrome
+# global-ua: 'clash.meta'
 
 dns:
   enable: true
   listen: '127.0.0.1:1053'
   store-fake-ip: true
   use-hosts: true
+  use-system-hosts: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/15
+  # IPv6 Fake-IP 池需要开启 ipv6: true；全局 TUN 还需设置 tun.inet6-address。
+  # fake-ip-range6: 'fdfe:dcba:9877::/64'
   # Fake-IP 排除列表使用域名快照；这里不接受 rule-set 引用。
   fake-ip-filter:
-    - '+.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa'
-    - '+.10.in-addr.arpa'
-    - '+.100.100.in-addr.arpa'
-    - '+.100.51.198.in-addr.arpa'
-    - '+.101.100.in-addr.arpa'
-    - '+.102.100.in-addr.arpa'
-    - '+.103.100.in-addr.arpa'
-    - '+.104.100.in-addr.arpa'
-    - '+.105.100.in-addr.arpa'
-    - '+.106.100.in-addr.arpa'
-    - '+.107.100.in-addr.arpa'
-    - '+.108.100.in-addr.arpa'
-    - '+.109.100.in-addr.arpa'
-    - '+.110.100.in-addr.arpa'
-    - '+.111.100.in-addr.arpa'
-    - '+.112.100.in-addr.arpa'
-    - '+.113.0.203.in-addr.arpa'
-    - '+.113.100.in-addr.arpa'
-    - '+.114.100.in-addr.arpa'
-    - '+.115.100.in-addr.arpa'
-    - '+.116.100.in-addr.arpa'
-    - '+.117.100.in-addr.arpa'
-    - '+.118.100.in-addr.arpa'
-    - '+.119.100.in-addr.arpa'
-    - '+.120.100.in-addr.arpa'
-    - '+.121.100.in-addr.arpa'
-    - '+.122.100.in-addr.arpa'
-    - '+.123.100.in-addr.arpa'
-    - '+.124.100.in-addr.arpa'
-    - '+.125.100.in-addr.arpa'
-    - '+.126.100.in-addr.arpa'
-    - '+.127.100.in-addr.arpa'
-    - '+.127.in-addr.arpa'
-    - '+.16.172.in-addr.arpa'
-    - '+.168.192.in-addr.arpa'
-    - '+.17.172.in-addr.arpa'
-    - '+.18.172.in-addr.arpa'
-    - '+.19.172.in-addr.arpa'
-    - '+.2.0.192.in-addr.arpa'
-    - '+.20.172.in-addr.arpa'
-    - '+.21.172.in-addr.arpa'
-    - '+.22.172.in-addr.arpa'
-    - '+.23.172.in-addr.arpa'
-    - '+.24.172.in-addr.arpa'
-    - '+.25.172.in-addr.arpa'
-    - '+.254.169.in-addr.arpa'
-    - '+.255.255.255.255.in-addr.arpa'
-    - '+.26.172.in-addr.arpa'
-    - '+.27.172.in-addr.arpa'
-    - '+.28.172.in-addr.arpa'
-    - '+.29.172.in-addr.arpa'
-    - '+.30.172.in-addr.arpa'
-    - '+.31.172.in-addr.arpa'
-    - '+.64.100.in-addr.arpa'
-    - '+.65.100.in-addr.arpa'
-    - '+.66.100.in-addr.arpa'
-    - '+.67.100.in-addr.arpa'
-    - '+.68.100.in-addr.arpa'
-    - '+.69.100.in-addr.arpa'
-    - '+.70.100.in-addr.arpa'
-    - '+.71.100.in-addr.arpa'
-    - '+.72.100.in-addr.arpa'
-    - '+.73.100.in-addr.arpa'
-    - '+.74.100.in-addr.arpa'
-    - '+.75.100.in-addr.arpa'
-    - '+.76.100.in-addr.arpa'
-    - '+.77.100.in-addr.arpa'
-    - '+.78.100.in-addr.arpa'
-    - '+.79.100.in-addr.arpa'
-    - '+.8.b.d.0.1.0.0.2.ip6.arpa'
-    - '+.8.e.f.ip6.arpa'
-    - '+.80.100.in-addr.arpa'
-    - '+.81.100.in-addr.arpa'
-    - '+.82.100.in-addr.arpa'
-    - '+.83.100.in-addr.arpa'
-    - '+.84.100.in-addr.arpa'
-    - '+.85.100.in-addr.arpa'
-    - '+.86.100.in-addr.arpa'
-    - '+.87.100.in-addr.arpa'
-    - '+.88.100.in-addr.arpa'
-    - '+.89.100.in-addr.arpa'
-    - '+.9.e.f.ip6.arpa'
-    - '+.90.100.in-addr.arpa'
-    - '+.91.100.in-addr.arpa'
-    - '+.92.100.in-addr.arpa'
-    - '+.93.100.in-addr.arpa'
-    - '+.94.100.in-addr.arpa'
-    - '+.95.100.in-addr.arpa'
-    - '+.96.100.in-addr.arpa'
-    - '+.97.100.in-addr.arpa'
-    - '+.98.100.in-addr.arpa'
-    - '+.99.100.in-addr.arpa'
-    - '+.a.e.f.ip6.arpa'
-    - '+.b.e.f.ip6.arpa'
-    - '+.d.f.ip6.arpa'
-    - '+.example'
-    - '+.hiwifi.com'
-    - '+.home.arpa'
-    - '+.internal'
-    - '+.invalid'
-    - '+.kis.v2.scr.kaspersky-labs.com'
-    - '+.lan'
-    - '+.leike.cc'
-    - '+.local'
-    - '+.localdomain'
-    - '+.localhost'
-    - '+.localhost.ptlogin2.qq.com'
-    - '+.localhost.sec.qq.com'
-    - '+.my.router'
-    - '+.peiluyou.com'
-    - '+.phicomm.me'
-    - '+.plex.direct'
-    - '+.router.ctc'
-    - '+.tendawifi.com'
-    - '+.test'
-    - '+.tplinkwifi.net'
-    - '+.ts.net'
-    - '+.zte.home'
-    - 'asusrouter.com'
-    - 'instant.arubanetworks.com'
-    - 'local.adguard.org'
-    - 'localhost.weixin.qq.com'
-    - 'localhost.work.weixin.qq.com'
-    - 'miwifi.com'
-    - 'oasisauth.h3c.com'
-    - 'router.asus.com'
-    - 'routerlogin.com'
-    - 'setmeup.arubanetworks.com'
-    - 'tplogin.cn'
-    - 'www.asusrouter.com'
-    - 'www.miwifi.com'
-    - 'www.routerlogin.com'
     - '*'
     - '*.*.xboxlive.com'
     - '*.126.net'
@@ -243,97 +103,6 @@ dns:
     - '*.time.edu.cn'
     - '*.xiami.com'
     - '*.y.qq.com'
-    - '+.3gppnetwork.org'
-    - '+.battle.net'
-    - '+.battlenet.com.cn'
-    - '+.cdn.nintendo.net'
-    - '+.cmbchina.com'
-    - '+.cmbimg.com'
-    - '+.dynv6.net'
-    - '+.gcloudcs.com'
-    - '+.gcloudsdk.com'
-    - '+.kk-rays.com'
-    - '+.market.xiaomi.com'
-    - '+.media.dssott.com'
-    - '+.msftconnecttest.com'
-    - '+.msftncsi.com'
-    - '+.n0808.com'
-    - '+.oray.com'
-    - '+.orayimg.com'
-    - '+.pool.ntp.org'
-    - '+.sandai.net'
-    - '+.srv.nintendo.net'
-    - '+.steamcontent.com'
-    - '+.stun.*.*'
-    - '+.stun.*.*.*'
-    - '+.stun.*.*.*.*'
-    - '+.stun.*.*.*.*.*'
-    - '+.uu.163.com'
-    - '+.wargaming.net'
-    - '+.wggames.cn'
-    - '+.wotgame.cn'
-    - '+.wowsgame.cn'
-    - 'adguardteam.github.io'
-    - 'adrules.top'
-    - 'amobile.music.tc.qq.com'
-    - 'anti-ad.net'
-    - 'api-jooxtt.sanook.com'
-    - 'api.joox.com'
-    - 'aqqmusic.tc.qq.com'
-    - 'dl.stream.qqmusic.qq.com'
-    - 'ff.dorado.sdo.com'
-    - 'heartbeat.belkin.com'
-    - 'isure.stream.qqmusic.qq.com'
-    - 'joox.com'
-    - 'lens.l.google.com'
-    - 'localhost.*.weixin.qq.com'
-    - 'localhost.ptlogin2.qq.com'
-    - 'localhost.sec.qq.com'
-    - 'mesu.apple.com'
-    - 'mijia cloud'
-    - 'mobileoc.music.tc.qq.com'
-    - 'music.163.com'
-    - 'music.migu.cn'
-    - 'music.taihe.com'
-    - 'musicapi.taihe.com'
-    - 'na.b.g-tun.com'
-    - 'ntp.*.com'
-    - 'ntp1.*.com'
-    - 'ntp2.*.com'
-    - 'ntp3.*.com'
-    - 'ntp4.*.com'
-    - 'ntp5.*.com'
-    - 'ntp6.*.com'
-    - 'ntp7.*.com'
-    - 'proxy.golang.org'
-    - 'ps.res.netease.com'
-    - 'shark007.net'
-    - 'songsearch.kugou.com'
-    - 'static.adtidy.org'
-    - 'streamoc.music.tc.qq.com'
-    - 'swcdn.apple.com'
-    - 'swdist.apple.com'
-    - 'swdownload.apple.com'
-    - 'swquery.apple.com'
-    - 'swscan.apple.com'
-    - 'time-ios.apple.com'
-    - 'time.*.apple.com'
-    - 'time.*.com'
-    - 'time.*.edu.cn'
-    - 'time.*.gov'
-    - 'time1.*.com'
-    - 'time1.cloud.tencent.com'
-    - 'time2.*.com'
-    - 'time3.*.com'
-    - 'time4.*.com'
-    - 'time5.*.com'
-    - 'time6.*.com'
-    - 'time7.*.com'
-    - 'trackercdn.kugou.com'
-    - 'xbox.*.*.microsoft.com'
-    - 'xbox.*.microsoft.com'
-    - 'xnotify.xboxlive.com'
-    - 'y.qq.com'
     - '+.0.zone'
     - '+.00.net'
     - '+.000.link'
@@ -1125,9 +894,13 @@ dns:
     - '+.1-luxury.com'
     - '+.1-sakuracat.com'
     - '+.1-yuan.net'
+    - '+.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa'
     - '+.1.biz'
     - '+.1.cc'
+    - '+.10.in-addr.arpa'
     - '+.100-tong.com'
+    - '+.100.100.in-addr.arpa'
+    - '+.100.51.198.in-addr.arpa'
     - '+.100.com'
     - '+.100.me'
     - '+.100.travel'
@@ -1258,6 +1031,7 @@ dns:
     - '+.100zd.com'
     - '+.100zhuang.com'
     - '+.100zp.com'
+    - '+.101.100.in-addr.arpa'
     - '+.101.com'
     - '+.10100.com'
     - '+.10101111.com'
@@ -1278,6 +1052,7 @@ dns:
     - '+.101jiajiao.com'
     - '+.101weiqi.com'
     - '+.101yx.com'
+    - '+.102.100.in-addr.arpa'
     - '+.1024fuli.com'
     - '+.1024g.com'
     - '+.1024ie.com'
@@ -1288,16 +1063,22 @@ dns:
     - '+.1026jz.com'
     - '+.102no.com'
     - '+.102pay.com'
+    - '+.103.100.in-addr.arpa'
     - '+.103153.com'
     - '+.10333.com'
     - '+.10349.com'
+    - '+.104.100.in-addr.arpa'
+    - '+.105.100.in-addr.arpa'
     - '+.1059.net'
+    - '+.106.100.in-addr.arpa'
     - '+.10625fffd42119ce.com'
     - '+.10639888.com'
     - '+.1065m.com'
     - '+.10666114.net'
+    - '+.107.100.in-addr.arpa'
     - '+.1073.com'
     - '+.107788.com'
+    - '+.108.100.in-addr.arpa'
     - '+.1088hg41.com'
     - '+.108ai.com'
     - '+.108mir.com'
@@ -1305,6 +1086,7 @@ dns:
     - '+.108qi.com'
     - '+.108sq.com'
     - '+.108tian.com'
+    - '+.109.100.in-addr.arpa'
     - '+.109.com'
     - '+.109360.com'
     - '+.10966.net'
@@ -1328,12 +1110,14 @@ dns:
     - '+.10soo.com'
     - '+.10tianqi.com'
     - '+.10yan.com'
+    - '+.110.100.in-addr.arpa'
     - '+.110.com'
     - '+.11000011.com'
     - '+.110ask.com'
     - '+.110disk.net'
     - '+.110route.com'
     - '+.110tm.com'
+    - '+.111.100.in-addr.arpa'
     - '+.111.com'
     - '+.111111111.com'
     - '+.111237.com'
@@ -1348,6 +1132,7 @@ dns:
     - '+.111867.com'
     - '+.111com.net'
     - '+.111yao.com'
+    - '+.112.100.in-addr.arpa'
     - '+.112112.com'
     - '+.112192.com'
     - '+.1122.com'
@@ -1356,12 +1141,15 @@ dns:
     - '+.1128job.com'
     - '+.112seo.com'
     - '+.112wan.com'
+    - '+.113.0.203.in-addr.arpa'
+    - '+.113.100.in-addr.arpa'
     - '+.11315.com'
     - '+.1133.cc'
     - '+.11343.com'
     - '+.113989.com'
     - '+.113dh.com'
     - '+.114-91.com'
+    - '+.114.100.in-addr.arpa'
     - '+.114.tel'
     - '+.1145858.com'
     - '+.11467.com'
@@ -1404,6 +1192,7 @@ dns:
     - '+.114zhibo.com'
     - '+.114zpw.com'
     - '+.114zw.org'
+    - '+.115.100.in-addr.arpa'
     - '+.115.com'
     - '+.115155.xyz'
     - '+.1156.com'
@@ -1417,6 +1206,7 @@ dns:
     - '+.115meta.com'
     - '+.115vod.com'
     - '+.115wg.com'
+    - '+.116.100.in-addr.arpa'
     - '+.1166.com'
     - '+.1168.tv'
     - '+.11684.com'
@@ -1426,10 +1216,12 @@ dns:
     - '+.116daohang.com'
     - '+.116kj.com'
     - '+.116yx.com'
+    - '+.117.100.in-addr.arpa'
     - '+.117915.com'
     - '+.117a6af992d4208e.com'
     - '+.117trip.com'
     - '+.117y.com'
+    - '+.118.100.in-addr.arpa'
     - '+.118114.net'
     - '+.118360.com'
     - '+.1188.com'
@@ -1438,6 +1230,7 @@ dns:
     - '+.118pan.com'
     - '+.118ttc.com'
     - '+.118wa.com'
+    - '+.119.100.in-addr.arpa'
     - '+.1190119.com'
     - '+.119120.org'
     - '+.11951.com'
@@ -1472,6 +1265,7 @@ dns:
     - '+.11wow.com'
     - '+.11xotn7p.com'
     - '+.11yinyuan.com'
+    - '+.120.100.in-addr.arpa'
     - '+.120.net'
     - '+.120918.com'
     - '+.120ask.com'
@@ -1492,6 +1286,7 @@ dns:
     - '+.120spd.com'
     - '+.120sun.com'
     - '+.120x.net'
+    - '+.121.100.in-addr.arpa'
     - '+.121034.com'
     - '+.121121.net'
     - '+.1212.com'
@@ -1503,6 +1298,7 @@ dns:
     - '+.121mai.com'
     - '+.121mu.com'
     - '+.121wty.com'
+    - '+.122.100.in-addr.arpa'
     - '+.122521.com'
     - '+.12272.vip'
     - '+.12291.com'
@@ -1510,6 +1306,7 @@ dns:
     - '+.122cn.net'
     - '+.122w.net'
     - '+.123-789.com'
+    - '+.123.100.in-addr.arpa'
     - '+.123.cc'
     - '+.12301.cc'
     - '+.1230539.com'
@@ -1616,7 +1413,9 @@ dns:
     - '+.123yiche.com'
     - '+.123ypw.com'
     - '+.123yx.com'
+    - '+.124.100.in-addr.arpa'
     - '+.124866.xyz'
+    - '+.125.100.in-addr.arpa'
     - '+.125180.com'
     - '+.12530.com'
     - '+.12533.com'
@@ -1631,13 +1430,16 @@ dns:
     - '+.125visa.com'
     - '+.125y.com'
     - '+.125yan.com'
+    - '+.126.100.in-addr.arpa'
     - '+.126.com'
     - '+.126.net'
     - '+.126blog.com'
     - '+.126disk.com'
     - '+.126job.net'
     - '+.126qiye.com'
+    - '+.127.100.in-addr.arpa'
     - '+.127.com'
+    - '+.127.in-addr.arpa'
     - '+.127.net'
     - '+.127z.com'
     - '+.128456.com'
@@ -1831,6 +1633,7 @@ dns:
     - '+.15xdd.com'
     - '+.15yl.com'
     - '+.15yunmall.com'
+    - '+.16.172.in-addr.arpa'
     - '+.160.com'
     - '+.160dyf.com'
     - '+.160job.com'
@@ -1904,6 +1707,7 @@ dns:
     - '+.166dns.com'
     - '+.16757.com'
     - '+.16768.com'
+    - '+.168.192.in-addr.arpa'
     - '+.168.com'
     - '+.16816.com'
     - '+.168267xz.com'
@@ -1915,7 +1719,6 @@ dns:
     - '+.16885.com'
     - '+.16886000.com'
     - '+.16888.com'
-    - '+.1688988.com'
     - '+.1688du.com'
     - '+.1688e.com'
     - '+.1688eric.com'
@@ -1974,6 +1777,7 @@ dns:
     - '+.16tz.com'
     - '+.16wl.cc'
     - '+.16xx8.com'
+    - '+.17.172.in-addr.arpa'
     - '+.170.com'
     - '+.17025.org'
     - '+.170601.xyz'
@@ -2260,6 +2064,7 @@ dns:
     - '+.17zwd.com'
     - '+.17zyxy.com'
     - '+.17zyxy.net'
+    - '+.18.172.in-addr.arpa'
     - '+.18023.com'
     - '+.18095.com'
     - '+.180disk.com'
@@ -2350,6 +2155,7 @@ dns:
     - '+.18zhuanqian.com'
     - '+.18zp.com'
     - '+.18zw.com'
+    - '+.19.172.in-addr.arpa'
     - '+.19.com'
     - '+.190.vip'
     - '+.1900.live'
@@ -2612,7 +2418,9 @@ dns:
     - '+.1zu.com'
     - '+.2-class.com'
     - '+.2-mm.net'
+    - '+.2.0.192.in-addr.arpa'
     - '+.2.biz'
+    - '+.20.172.in-addr.arpa'
     - '+.20001104.com'
     - '+.2000200.com'
     - '+.200022.xyz'
@@ -2681,6 +2489,7 @@ dns:
     - '+.20xy.cc'
     - '+.20z.com'
     - '+.21-sun.com'
+    - '+.21.172.in-addr.arpa'
     - '+.210189.com'
     - '+.210997.com'
     - '+.210z.com'
@@ -2766,6 +2575,7 @@ dns:
     - '+.21kk.cc'
     - '+.21ks.net'
     - '+.21kunpeng.com'
+    - '+.21kyj.com'
     - '+.21ld.com'
     - '+.21maoyi.com'
     - '+.21mcu.com'
@@ -2809,6 +2619,7 @@ dns:
     - '+.21yq.com'
     - '+.21ytv.com'
     - '+.21zbs.com'
+    - '+.22.172.in-addr.arpa'
     - '+.22.com'
     - '+.220840.com'
     - '+.220c.com'
@@ -2859,11 +2670,13 @@ dns:
     - '+.22n.com'
     - '+.22net.com'
     - '+.22plc.com'
+    - '+.22ppt.com'
     - '+.22pq.com'
     - '+.22tianbo.com'
     - '+.22tj.com'
     - '+.22vape.com'
     - '+.22vd.com'
+    - '+.23.172.in-addr.arpa'
     - '+.230890.com'
     - '+.231083.com'
     - '+.231122.com'
@@ -2942,6 +2755,7 @@ dns:
     - '+.23ye.com'
     - '+.23yy.com'
     - '+.23zw.com'
+    - '+.24.172.in-addr.arpa'
     - '+.24198ef3f855c8ff.com'
     - '+.2424ph.com'
     - '+.246546.com'
@@ -2964,6 +2778,7 @@ dns:
     - '+.24th.com'
     - '+.24timemap.com'
     - '+.24u7tos.com'
+    - '+.25.172.in-addr.arpa'
     - '+.250.cc'
     - '+.2500.tv'
     - '+.2500city.com'
@@ -2977,7 +2792,9 @@ dns:
     - '+.25395.vip'
     - '+.253952.com'
     - '+.253u.com'
+    - '+.254.169.in-addr.arpa'
     - '+.254game.com'
+    - '+.255.255.255.255.in-addr.arpa'
     - '+.255616.com'
     - '+.25565.net'
     - '+.25662zubo23739.com'
@@ -3013,6 +2830,7 @@ dns:
     - '+.25xz.com'
     - '+.25yi.com'
     - '+.25yz.com'
+    - '+.26.172.in-addr.arpa'
     - '+.260.net'
     - '+.260068.com'
     - '+.263-mail.net'
@@ -3050,6 +2868,7 @@ dns:
     - '+.26joy.com'
     - '+.26ks.cc'
     - '+.26s.com'
+    - '+.27.172.in-addr.arpa'
     - '+.270326012f82.icu'
     - '+.270top.com'
     - '+.27195.vip'
@@ -3070,6 +2889,7 @@ dns:
     - '+.27l.com'
     - '+.27tj.com'
     - '+.27ws.com'
+    - '+.28.172.in-addr.arpa'
     - '+.28.bet'
     - '+.281010.com'
     - '+.28126.cc'
@@ -3097,6 +2917,7 @@ dns:
     - '+.28yt.com'
     - '+.28z9.com'
     - '+.28zhe.com'
+    - '+.29.172.in-addr.arpa'
     - '+.29029.com'
     - '+.2903866.net'
     - '+.291315.com'
@@ -3236,6 +3057,7 @@ dns:
     - '+.3-3.me'
     - '+.3-hospital-cqmu.com'
     - '+.3.biz'
+    - '+.30.172.in-addr.arpa'
     - '+.30.net'
     - '+.3000.com'
     - '+.300033.info'
@@ -3276,6 +3098,7 @@ dns:
     - '+.30th-feb.com'
     - '+.30vps.com'
     - '+.30w.co'
+    - '+.31.172.in-addr.arpa'
     - '+.310game.com'
     - '+.310s-2520.com'
     - '+.310tv.com'
@@ -4110,6 +3933,7 @@ dns:
     - '+.3gmimo.com'
     - '+.3gogogo.com'
     - '+.3gpk.net'
+    - '+.3gppnetwork.org'
     - '+.3gqqw.com'
     - '+.3gsou.com'
     - '+.3gu.com'
@@ -4477,7 +4301,6 @@ dns:
     - '+.4779.com'
     - '+.47819.com'
     - '+.47daili.com'
-    - '+.47e17a13ee18fa43.com'
     - '+.47gs.com'
     - '+.47rq.com'
     - '+.47zu.com'
@@ -4502,7 +4325,6 @@ dns:
     - '+.4901.com'
     - '+.490186.com'
     - '+.491.com'
-    - '+.492f2622e64c138e.com'
     - '+.4930.com'
     - '+.4933.com'
     - '+.49358.com'
@@ -6390,6 +6212,7 @@ dns:
     - '+.63u.net'
     - '+.63yx.com'
     - '+.63yy.com'
+    - '+.64.100.in-addr.arpa'
     - '+.641.com'
     - '+.642online.com'
     - '+.64365.com'
@@ -6409,6 +6232,7 @@ dns:
     - '+.64ma.com'
     - '+.64mv.com'
     - '+.64pay.com'
+    - '+.65.100.in-addr.arpa'
     - '+.6501111.com'
     - '+.65119.com'
     - '+.651700.com'
@@ -6431,6 +6255,7 @@ dns:
     - '+.65ec0ea7f04562ad.com'
     - '+.65liuxue.com'
     - '+.65mhxy.com'
+    - '+.66.100.in-addr.arpa'
     - '+.6600.org'
     - '+.66016.com'
     - '+.660378.com'
@@ -6562,6 +6387,7 @@ dns:
     - '+.66zhang.com'
     - '+.66zhizu.com'
     - '+.66zhuang.com'
+    - '+.67.100.in-addr.arpa'
     - '+.67.com'
     - '+.67017.com'
     - '+.6711.com'
@@ -6593,6 +6419,7 @@ dns:
     - '+.67wanwan.com'
     - '+.67wx.com'
     - '+.67y.com'
+    - '+.68.100.in-addr.arpa'
     - '+.68.com'
     - '+.68.vip'
     - '+.680.com'
@@ -6634,7 +6461,7 @@ dns:
     - '+.68u.co'
     - '+.68websoft.com'
     - '+.68zhan.net'
-    - '+.69090.com'
+    - '+.69.100.in-addr.arpa'
     - '+.6912s.com'
     - '+.6917.com'
     - '+.692657.com'
@@ -6786,6 +6613,7 @@ dns:
     - '+.7-meeting.com'
     - '+.7-mi.net'
     - '+.7-wx.com'
+    - '+.70.100.in-addr.arpa'
     - '+.700618.com'
     - '+.70098.com'
     - '+.700chat.com'
@@ -6809,6 +6637,7 @@ dns:
     - '+.70ppt.com'
     - '+.70ym.com'
     - '+.70yx.com'
+    - '+.71.100.in-addr.arpa'
     - '+.71.net'
     - '+.710hf.com'
     - '+.7114.com'
@@ -6853,6 +6682,7 @@ dns:
     - '+.71xe.com'
     - '+.71xk.com'
     - '+.71ywl.com'
+    - '+.72.100.in-addr.arpa'
     - '+.72.chat'
     - '+.72.com'
     - '+.72017.net'
@@ -6906,6 +6736,7 @@ dns:
     - '+.72y.co'
     - '+.72yun.com'
     - '+.72zhan.com'
+    - '+.73.100.in-addr.arpa'
     - '+.731.tv'
     - '+.73110010.com'
     - '+.73232yx.com'
@@ -6924,6 +6755,7 @@ dns:
     - '+.73card.com'
     - '+.73so.com'
     - '+.73zw8.com'
+    - '+.74.100.in-addr.arpa'
     - '+.74.com'
     - '+.7415.com'
     - '+.7428.net'
@@ -6943,6 +6775,7 @@ dns:
     - '+.74dns.com'
     - '+.74f11ac633122c20.com'
     - '+.74hao.com'
+    - '+.75.100.in-addr.arpa'
     - '+.75111.com'
     - '+.75111.net'
     - '+.75122d9a05f7a5a7.com'
@@ -6965,6 +6798,7 @@ dns:
     - '+.75pk.com'
     - '+.75txt.com'
     - '+.75ww.com'
+    - '+.76.100.in-addr.arpa'
     - '+.7618.com'
     - '+.7631.com'
     - '+.7651.com'
@@ -6989,6 +6823,7 @@ dns:
     - '+.76pay.com'
     - '+.76y.com'
     - '+.76zu.com'
+    - '+.77.100.in-addr.arpa'
     - '+.77005163.xyz'
     - '+.770539.com'
     - '+.7711.com'
@@ -7086,6 +6921,7 @@ dns:
     - '+.77zhangh.com'
     - '+.77zhanghao.com'
     - '+.77zn.com'
+    - '+.78.100.in-addr.arpa'
     - '+.78.link'
     - '+.781203.com'
     - '+.78126dh.com'
@@ -7121,6 +6957,7 @@ dns:
     - '+.78plat.com'
     - '+.78v.com'
     - '+.78yx.net'
+    - '+.79.100.in-addr.arpa'
     - '+.79.biz'
     - '+.790.com'
     - '+.793360.com'
@@ -7283,8 +7120,11 @@ dns:
     - '+.7zm.com'
     - '+.7zz6.com'
     - '+.7zzy.com'
+    - '+.8.b.d.0.1.0.0.2.ip6.arpa'
     - '+.8.biz'
+    - '+.8.e.f.ip6.arpa'
     - '+.8.xyz'
+    - '+.80.100.in-addr.arpa'
     - '+.80000.cc'
     - '+.8000yi.com'
     - '+.800507.com'
@@ -7362,6 +7202,7 @@ dns:
     - '+.80x.co'
     - '+.80xg.com'
     - '+.80zw.info'
+    - '+.81.100.in-addr.arpa'
     - '+.810840.com'
     - '+.811sisp.com'
     - '+.81241g43cj.world'
@@ -7413,6 +7254,7 @@ dns:
     - '+.81xy.com'
     - '+.81zhongwenx.com'
     - '+.81zw.com'
+    - '+.82.100.in-addr.arpa'
     - '+.8203app.com'
     - '+.8207hh.net'
     - '+.8207uu.net'
@@ -7439,6 +7281,7 @@ dns:
     - '+.82ip.com'
     - '+.82ky.com'
     - '+.82pk.com'
+    - '+.83.100.in-addr.arpa'
     - '+.830096.com'
     - '+.83124.com'
     - '+.83133.com'
@@ -7466,6 +7309,7 @@ dns:
     - '+.83kxs.com'
     - '+.83mo7n9giq.com'
     - '+.83x.cc'
+    - '+.84.100.in-addr.arpa'
     - '+.84.com'
     - '+.84008.com'
     - '+.84185858.com'
@@ -7481,6 +7325,7 @@ dns:
     - '+.84ke.com'
     - '+.84ktv.com'
     - '+.84ny.com'
+    - '+.85.100.in-addr.arpa'
     - '+.850718.xyz'
     - '+.85229666.com'
     - '+.85253000.com'
@@ -7498,6 +7343,7 @@ dns:
     - '+.85sc.com'
     - '+.85xt.com'
     - '+.86-import.com'
+    - '+.86.100.in-addr.arpa'
     - '+.86.cc'
     - '+.860029.com'
     - '+.860527.com'
@@ -7563,6 +7409,7 @@ dns:
     - '+.86xq.com'
     - '+.86y.org'
     - '+.86yqy.com'
+    - '+.87.100.in-addr.arpa'
     - '+.87.vip'
     - '+.870.com'
     - '+.870818.com'
@@ -7597,6 +7444,7 @@ dns:
     - '+.87vr.com'
     - '+.87yy.com'
     - '+.88-z.com'
+    - '+.88.100.in-addr.arpa'
     - '+.88.com'
     - '+.8800.org'
     - '+.880022.com'
@@ -7702,6 +7550,7 @@ dns:
     - '+.88ysg.com'
     - '+.88zha.com'
     - '+.88zjzy.com'
+    - '+.89.100.in-addr.arpa'
     - '+.89006006.com'
     - '+.89178.com'
     - '+.892qipai.com'
@@ -7832,8 +7681,10 @@ dns:
     - '+.9-xin.com'
     - '+.9-zhuce.com'
     - '+.9.biz'
+    - '+.9.e.f.ip6.arpa'
     - '+.9.plus'
     - '+.9.xyz'
+    - '+.90.100.in-addr.arpa'
     - '+.9000wy.com'
     - '+.900112.com'
     - '+.900501.xyz'
@@ -7863,6 +7714,7 @@ dns:
     - '+.90yk.com'
     - '+.90zm.net'
     - '+.91-box.com'
+    - '+.91.100.in-addr.arpa'
     - '+.91.com'
     - '+.91.plus'
     - '+.9100.ink'
@@ -8088,6 +7940,7 @@ dns:
     - '+.91zhongkao.com'
     - '+.91zhuti.com'
     - '+.91znyx.com'
+    - '+.92.100.in-addr.arpa'
     - '+.92.net'
     - '+.920uc.com'
     - '+.921.com'
@@ -8152,6 +8005,7 @@ dns:
     - '+.92zc.com'
     - '+.92zhiqu.com'
     - '+.92zuqu.com'
+    - '+.93.100.in-addr.arpa'
     - '+.930a48879eaa652b.com'
     - '+.930hh.com'
     - '+.9312.net'
@@ -8191,6 +8045,7 @@ dns:
     - '+.93yo.com'
     - '+.93you.com'
     - '+.93zp.com'
+    - '+.94.100.in-addr.arpa'
     - '+.94001.vip'
     - '+.940177.com'
     - '+.940304.xyz'
@@ -8230,6 +8085,7 @@ dns:
     - '+.94you.net'
     - '+.94ys.com'
     - '+.95-1.vip'
+    - '+.95.100.in-addr.arpa'
     - '+.95.com'
     - '+.95001111.com'
     - '+.95007.com'
@@ -8305,6 +8161,7 @@ dns:
     - '+.95xiu.com'
     - '+.95ye.com'
     - '+.95yijing.com'
+    - '+.96.100.in-addr.arpa'
     - '+.960123.com'
     - '+.960638.com'
     - '+.96090090.com'
@@ -8377,6 +8234,7 @@ dns:
     - '+.96xz.com'
     - '+.96yx.com'
     - '+.96zxue.com'
+    - '+.97.100.in-addr.arpa'
     - '+.97.biz'
     - '+.97.cc'
     - '+.9700hg.com'
@@ -8421,6 +8279,7 @@ dns:
     - '+.97wyw.com'
     - '+.97xdj.net'
     - '+.97zm.com'
+    - '+.98.100.in-addr.arpa'
     - '+.98.com'
     - '+.9800.com'
     - '+.980512.com'
@@ -8473,6 +8332,7 @@ dns:
     - '+.98yl.com'
     - '+.98zhibo.com'
     - '+.98znz.com'
+    - '+.99.100.in-addr.arpa'
     - '+.99.com'
     - '+.99113guoji.com'
     - '+.99114.com'
@@ -8767,6 +8627,7 @@ dns:
     - '+.9you.com'
     - '+.9you.net'
     - '+.9yread.com'
+    - '+.9yuanlive.com'
     - '+.9yue.com'
     - '+.9yuntu.com'
     - '+.9yuonline.com'
@@ -8787,6 +8648,7 @@ dns:
     - '+.a-startech.com'
     - '+.a-sy.com'
     - '+.a-xun.com'
+    - '+.a.e.f.ip6.arpa'
     - '+.a04d48409e40ca3f.com'
     - '+.a0598.com'
     - '+.a0770.com'
@@ -8816,6 +8678,7 @@ dns:
     - '+.a5xiazai.com'
     - '+.a61cee76f4df41b1.com'
     - '+.a6api.com'
+    - '+.a6api.vip'
     - '+.a6h8.com'
     - '+.a700in.ren'
     - '+.a75d755806b1095d.com'
@@ -9254,6 +9117,7 @@ dns:
     - '+.adpfm513.com'
     - '+.adplusx.com'
     - '+.adpsh.com'
+    - '+.adqiyu.com'
     - '+.adqtt.net'
     - '+.adquan.com'
     - '+.adrkwai.com'
@@ -9455,6 +9319,7 @@ dns:
     - '+.agnaw.com'
     - '+.agpolis.com'
     - '+.agrantsem.com'
+    - '+.agriglobaltradeai.com'
     - '+.agriotcloud.com'
     - '+.agrittex.com'
     - '+.agrochemshow.com'
@@ -10113,6 +9978,7 @@ dns:
     - '+.airtofly.com'
     - '+.airtu.me'
     - '+.airwh.com'
+    - '+.airxizang.com'
     - '+.aisanrenxing.com'
     - '+.aisaohuo.com'
     - '+.aisbeijing.com'
@@ -10470,6 +10336,7 @@ dns:
     - '+.alictf.com'
     - '+.alidayu.com'
     - '+.aliddmall.com'
+    - '+.alidns-2.com'
     - '+.alidns.com'
     - '+.alidns.net'
     - '+.alidnsv122.com'
@@ -12051,6 +11918,7 @@ dns:
     - '+.atcloudbox.com'
     - '+.atcontainer.com'
     - '+.atcpu.com'
+    - '+.atengyun.com'
     - '+.aterminal.net'
     - '+.atfeng.com'
     - '+.atgbiotechnology.com'
@@ -12619,6 +12487,7 @@ dns:
     - '+.b-raymedia.com'
     - '+.b.biz'
     - '+.b.c2r.ts.cdn.office.net'
+    - '+.b.e.f.ip6.arpa'
     - '+.b01.net'
     - '+.b08.com'
     - '+.b1bj.com'
@@ -13489,7 +13358,9 @@ dns:
     - '+.batterydir.com'
     - '+.batterykey.com'
     - '+.battle-fsd.com'
+    - '+.battle.net'
     - '+.battlecare.net'
+    - '+.battlenet.com.cn'
     - '+.battleofballs.com'
     - '+.batupian.net'
     - '+.baudashiner.com'
@@ -15489,7 +15360,6 @@ dns:
     - '+.bjxf315.com'
     - '+.bjxhly.com'
     - '+.bjximei.com'
-    - '+.bjxingma.com'
     - '+.bjxingzheng.com'
     - '+.bjxinku.com'
     - '+.bjxjyy666.com'
@@ -17327,7 +17197,6 @@ dns:
     - '+.caiweiming.com'
     - '+.caiwennews.com'
     - '+.caiwuchina.com'
-    - '+.caixadirectaanalisar.com'
     - '+.caixin.com'
     - '+.caixinfoundation.org'
     - '+.caixinmedia.com'
@@ -18309,6 +18178,7 @@ dns:
     - '+.cdn-v.com'
     - '+.cdn.fun'
     - '+.cdn.me'
+    - '+.cdn.nintendo.net'
     - '+.cdn.show'
     - '+.cdn.vin'
     - '+.cdn000.com'
@@ -19234,6 +19104,7 @@ dns:
     - '+.chaoyi996.com'
     - '+.chaoyinjiu.com'
     - '+.chaoyuesd.com'
+    - '+.chaoyun168.com'
     - '+.chaozhoudaily.com'
     - '+.chaozhouyin.com'
     - '+.chaozuo.com'
@@ -19262,6 +19133,7 @@ dns:
     - '+.chatairc.com'
     - '+.chatanywhere.tech'
     - '+.chatartpro.com'
+    - '+.chatdoing.com'
     - '+.chateaustarriver.com'
     - '+.chatglm.site'
     - '+.chatgptboke.com'
@@ -19269,6 +19141,7 @@ dns:
     - '+.chatmindai.net'
     - '+.chatnos.com'
     - '+.chatopera.com'
+    - '+.chatppt.com'
     - '+.chatqp.net'
     - '+.chatvgx.com'
     - '+.chatyygpt.com'
@@ -19624,6 +19497,7 @@ dns:
     - '+.chezvi.com'
     - '+.chfsmartad.com'
     - '+.chgcw.com'
+    - '+.chggzh.com'
     - '+.chghouse.org'
     - '+.chgi.net'
     - '+.chgie.com'
@@ -21131,7 +21005,6 @@ dns:
     - '+.chuanshanqundao.com'
     - '+.chuansinfo.com'
     - '+.chuantec.com'
-    - '+.chuantiegroup.com'
     - '+.chuanye.com'
     - '+.chuanyejinxuan.xyz'
     - '+.chuanyifu.com'
@@ -21989,8 +21862,10 @@ dns:
     - '+.cmb-leasing.com'
     - '+.cmbajia.com'
     - '+.cmbchina.biz'
+    - '+.cmbchina.com'
     - '+.cmbchina.net'
     - '+.cmbchinawm.com'
+    - '+.cmbimg.com'
     - '+.cmbuat.com'
     - '+.cmbwlb.com'
     - '+.cmbyc.com'
@@ -22394,6 +22269,7 @@ dns:
     - '+.cndi-bj.com'
     - '+.cndi.com'
     - '+.cndids.com'
+    - '+.cndik.com'
     - '+.cndingli.com'
     - '+.cndingxi.com'
     - '+.cndits.com'
@@ -22498,6 +22374,7 @@ dns:
     - '+.cngin.com'
     - '+.cngma.com'
     - '+.cngold.org'
+    - '+.cngoldprice.com'
     - '+.cngoldres.com'
     - '+.cngolf.tv'
     - '+.cngongfu.com'
@@ -23172,6 +23049,7 @@ dns:
     - '+.codeweixin.com'
     - '+.codewoody.com'
     - '+.codex-watch.com'
+    - '+.codexplus.vip'
     - '+.codezyw.com'
     - '+.codigoscript.com'
     - '+.coding-io.com'
@@ -23256,7 +23134,6 @@ dns:
     - '+.college-ing.com'
     - '+.college.globalsign.com'
     - '+.collt.org'
-    - '+.colly-pink.com'
     - '+.colobu.com'
     - '+.colocess.com'
     - '+.color-measure.com'
@@ -25077,6 +24954,7 @@ dns:
     - '+.cuuhn.com'
     - '+.cuumo.com'
     - '+.cux.cc'
+    - '+.cuzkeplox.com'
     - '+.cuzz.site'
     - '+.cvc898cvc.com'
     - '+.cvchome.com'
@@ -25487,6 +25365,7 @@ dns:
     - '+.czyuxing.com'
     - '+.czyxba.com'
     - '+.czyzd.com'
+    - '+.czzdpb.com'
     - '+.czzqp.com'
     - '+.czzsw.com'
     - '+.czztjj.com'
@@ -25505,6 +25384,7 @@ dns:
     - '+.d-techs.com'
     - '+.d-wolves.com'
     - '+.d.design'
+    - '+.d.f.ip6.arpa'
     - '+.d00.net'
     - '+.d03jd.com'
     - '+.d0be5a65855b67f1.com'
@@ -25738,7 +25618,6 @@ dns:
     - '+.daigou.com'
     - '+.daihing.com'
     - '+.daijun.com'
-    - '+.daikandq.com'
     - '+.daikuan.com'
     - '+.daili321.com'
     - '+.dailianmama.com'
@@ -25869,6 +25748,7 @@ dns:
     - '+.damijing.com'
     - '+.damingweb.com'
     - '+.damiw.com'
+    - '+.damixiao.com'
     - '+.damndigital.com'
     - '+.damo-academy.com'
     - '+.damodel.com'
@@ -26079,6 +25959,7 @@ dns:
     - '+.darknavy.org'
     - '+.darknight.games'
     - '+.darmao.com'
+    - '+.darmoshark.cc'
     - '+.darongcheng.com'
     - '+.darryring.com'
     - '+.dartchina.com'
@@ -26485,6 +26366,7 @@ dns:
     - '+.ddedush.com'
     - '+.ddfans.com'
     - '+.ddfchina.com'
+    - '+.ddfl5.com'
     - '+.ddfresh.net'
     - '+.ddfzb.com'
     - '+.ddgjjj.com'
@@ -27021,6 +26903,7 @@ dns:
     - '+.dggcyy.com'
     - '+.dggdk.com'
     - '+.dgggs.com'
+    - '+.dgghj.ltd'
     - '+.dgghy.com'
     - '+.dggjqw.com'
     - '+.dggjyy.com'
@@ -27351,6 +27234,7 @@ dns:
     - '+.dicila-china.com'
     - '+.dicom365.com'
     - '+.dictall.com'
+    - '+.dida.com'
     - '+.dida110.com'
     - '+.dida365.com'
     - '+.didabds.com'
@@ -27857,6 +27741,7 @@ dns:
     - '+.dlxk.com'
     - '+.dlxmicro.com'
     - '+.dlxww.com'
+    - '+.dly-cn.com'
     - '+.dly56.com'
     - '+.dlyy365.com'
     - '+.dlzb.com'
@@ -29355,6 +29240,7 @@ dns:
     - '+.dynabook-dbh.com'
     - '+.dynavolt.net'
     - '+.dynguyeniq.com'
+    - '+.dynv6.net'
     - '+.dyonr.com'
     - '+.dyqc.com'
     - '+.dyqh.info'
@@ -30268,6 +30154,7 @@ dns:
     - '+.ef17145aecd7dd06.com'
     - '+.ef360.com'
     - '+.ef360.net'
+    - '+.efaka.net'
     - '+.efang.tv'
     - '+.efangwang.com'
     - '+.efapiao.com'
@@ -30750,7 +30637,6 @@ dns:
     - '+.enjoyor.net'
     - '+.enjoyyue.com'
     - '+.enjoyz.com'
-    - '+.enketu.com'
     - '+.enkichen.com'
     - '+.enkj.com'
     - '+.enkris.com'
@@ -31412,6 +31298,7 @@ dns:
     - '+.examda.com'
     - '+.examebook.com'
     - '+.examk.com'
+    - '+.example'
     - '+.exampx.com'
     - '+.examw.com'
     - '+.exands.com'
@@ -32303,6 +32190,7 @@ dns:
     - '+.feelcars.com'
     - '+.feelchat.net'
     - '+.feelec.net'
+    - '+.feelfish.com'
     - '+.feelsoar.com'
     - '+.feemoo.com'
     - '+.feemoo.hk'
@@ -32482,6 +32370,7 @@ dns:
     - '+.felicitysolar.com'
     - '+.feling.net'
     - '+.felink.com'
+    - '+.felix-fang.life'
     - '+.felix021.com'
     - '+.felizpg.com'
     - '+.felmvip.com'
@@ -32744,6 +32633,7 @@ dns:
     - '+.fhd001.com'
     - '+.fheb-four.com'
     - '+.fheb-six.com'
+    - '+.fhezyk.com'
     - '+.fhfxys.com'
     - '+.fhgame.com'
     - '+.fhgjds.com'
@@ -33483,6 +33373,7 @@ dns:
     - '+.fosstea.com'
     - '+.fosun-uhi.com'
     - '+.fosun.com'
+    - '+.fosung.com'
     - '+.fosunhealth.com'
     - '+.fosunholiday.com'
     - '+.fosunmetal.com'
@@ -33989,7 +33880,6 @@ dns:
     - '+.fumiaoyinpin.com'
     - '+.fumin.com'
     - '+.fumu.com'
-    - '+.fumubang.com'
     - '+.fumuhui.com'
     - '+.fun.tv'
     - '+.fun4go.com'
@@ -34939,10 +34829,12 @@ dns:
     - '+.gcld.net'
     - '+.gclhgc.com'
     - '+.gcloudcache.com'
+    - '+.gcloudcs.com'
     - '+.gcloudcstest.com'
     - '+.gcloudcstestonly.com'
     - '+.gclouddolphin.com'
     - '+.gcloudgbs.com'
+    - '+.gcloudsdk.com'
     - '+.gcloudsvcs.com'
     - '+.gcmc.cc'
     - '+.gcok.com'
@@ -35315,6 +35207,7 @@ dns:
     - '+.gdshunna.net'
     - '+.gdshuojin.com'
     - '+.gdsia.net'
+    - '+.gdsicsemi.com'
     - '+.gdsjqr.com'
     - '+.gdsjx.com'
     - '+.gdsjxjy.com'
@@ -36773,6 +36666,7 @@ dns:
     - '+.gongkaohub.com'
     - '+.gongkaoleida.com'
     - '+.gongkaowo.com'
+    - '+.gongke.net'
     - '+.gongkong.com'
     - '+.gongkongbpo.com'
     - '+.gongkongedu.com'
@@ -37180,6 +37074,7 @@ dns:
     - '+.greenits.net'
     - '+.greenlandcn.com'
     - '+.greenlandsc.com'
+    - '+.greennet-inc.com'
     - '+.greenpine.cc'
     - '+.greenswolf.com'
     - '+.greentomail.com'
@@ -38048,6 +37943,7 @@ dns:
     - '+.guyuenglish.com'
     - '+.guyungame.com'
     - '+.guyuns.asia'
+    - '+.guzaza.com'
     - '+.guzhang.com'
     - '+.guzhenm.com'
     - '+.guzhongtrade.com'
@@ -39792,6 +39688,7 @@ dns:
     - '+.gyaqyy.com'
     - '+.gyb086.com'
     - '+.gybyscy.com'
+    - '+.gyccwx.com'
     - '+.gycharm.com'
     - '+.gycode.com'
     - '+.gyddos.com'
@@ -41248,6 +41145,7 @@ dns:
     - '+.haohuan.com'
     - '+.haohuanjiao.com'
     - '+.haohuoyuan.com'
+    - '+.haohuxx.com'
     - '+.haointl.com'
     - '+.haoinvest.com'
     - '+.haoji.me'
@@ -41709,6 +41607,7 @@ dns:
     - '+.hbgrb.net'
     - '+.hbgroups.com'
     - '+.hbgsetc.com'
+    - '+.hbgsoft.com'
     - '+.hbgswl.com'
     - '+.hbgwy.org'
     - '+.hbgzh.com'
@@ -42239,6 +42138,7 @@ dns:
     - '+.heartide.com'
     - '+.heartinsti.com'
     - '+.heartxin.com'
+    - '+.heartyong.com'
     - '+.heating-sh.com'
     - '+.heatingtrace.com'
     - '+.heavenlywind.cc'
@@ -43099,6 +42999,7 @@ dns:
     - '+.hibymusic.com'
     - '+.hic.cloud'
     - '+.hicane.com'
+    - '+.hicaspian.com'
     - '+.hicdma.com'
     - '+.hiceon.com'
     - '+.hichain.com'
@@ -43279,6 +43180,7 @@ dns:
     - '+.hiphotonics.com'
     - '+.hipiao.com'
     - '+.hipole.com'
+    - '+.hippoaixue.com'
     - '+.hippoanimation.com'
     - '+.hippter.com'
     - '+.hipu.com'
@@ -43356,6 +43258,7 @@ dns:
     - '+.hiwechats.com'
     - '+.hiweixiu.com'
     - '+.hiwelcom.com'
+    - '+.hiwifi.com'
     - '+.hiwiyi.com'
     - '+.hiwms.com'
     - '+.hiworld.com'
@@ -44178,6 +44081,7 @@ dns:
     - '+.holy58.com'
     - '+.holymalls.com'
     - '+.holyxiongan.com'
+    - '+.home.arpa'
     - '+.home0311.com'
     - '+.home0538.com'
     - '+.home0668.com'
@@ -45013,6 +44917,7 @@ dns:
     - '+.htfilter.com'
     - '+.htfpartner.com'
     - '+.htfutures.com'
+    - '+.htfzsdk.com'
     - '+.htg520.com'
     - '+.htgjjl.com'
     - '+.htgkdz.com'
@@ -48232,7 +48137,6 @@ dns:
     - '+.iikuzhan.com'
     - '+.iikx.com'
     - '+.iinhotel.com'
-    - '+.iinorii.com'
     - '+.iiolink.com'
     - '+.iiong.com'
     - '+.iipcloud.com'
@@ -48960,6 +48864,7 @@ dns:
     - '+.interchinawater.com'
     - '+.interface003.com'
     - '+.interiorous.com'
+    - '+.internal'
     - '+.internationalbrand.net'
     - '+.internbird.com'
     - '+.internetke.com'
@@ -48992,6 +48897,7 @@ dns:
     - '+.inuorui.com'
     - '+.inuu6.com'
     - '+.inuyasha.love'
+    - '+.invalid'
     - '+.invaluablu.com'
     - '+.inveno.com'
     - '+.invescogreatwall.com'
@@ -50850,7 +50756,6 @@ dns:
     - '+.jiancepai.com'
     - '+.jiancepaper.com'
     - '+.jiancesys.com'
-    - '+.jianchiapp.com'
     - '+.jianchihu.net'
     - '+.jiandaima.com'
     - '+.jiandan.net'
@@ -51140,6 +51045,7 @@ dns:
     - '+.jiayaw.com'
     - '+.jiayi56.com'
     - '+.jiayin618.com'
+    - '+.jiayinglive.com'
     - '+.jiayougo.com'
     - '+.jiayoujsq.com'
     - '+.jiayouxueba.com'
@@ -52837,6 +52743,7 @@ dns:
     - '+.joyinvleah.com'
     - '+.joyj.com'
     - '+.joymeng.com'
+    - '+.joymeter.com'
     - '+.joyncleon.com'
     - '+.joynext.com'
     - '+.joyochem.com'
@@ -52851,6 +52758,7 @@ dns:
     - '+.joyson.com'
     - '+.joyssl.com'
     - '+.joystay.net'
+    - '+.joysuch.com'
     - '+.joysung.com'
     - '+.joysunsh.com'
     - '+.joytest.org'
@@ -53808,7 +53716,6 @@ dns:
     - '+.juming-xz.com'
     - '+.juming.com'
     - '+.jumingwang.com'
-    - '+.jumold.com'
     - '+.jumore.com'
     - '+.jump-center.com'
     - '+.jump-game.com'
@@ -54516,6 +54423,7 @@ dns:
     - '+.jzxjcf.com'
     - '+.jzxs.com'
     - '+.jzygczx.com'
+    - '+.jzyhp.com'
     - '+.jzyqyb.com'
     - '+.jzyqzypg.com'
     - '+.jzyx.com'
@@ -55018,6 +54926,7 @@ dns:
     - '+.kc-keycool.com'
     - '+.kc0011.net'
     - '+.kc87.com'
+    - '+.kcallme.com'
     - '+.kcbebank.com'
     - '+.kccidc.com'
     - '+.kccn.net'
@@ -55382,7 +55291,6 @@ dns:
     - '+.kfhome.com'
     - '+.kfhty.com'
     - '+.kfj.cc'
-    - '+.kfjd.com'
     - '+.kfjyd.com'
     - '+.kfjyjt.com'
     - '+.kflhgs.com'
@@ -55583,6 +55491,7 @@ dns:
     - '+.kirin-tech.com'
     - '+.kirinmach.com'
     - '+.kirkcloud.com'
+    - '+.kis.v2.scr.kaspersky-labs.com'
     - '+.kiscoca.com'
     - '+.kisdee.com'
     - '+.kisence.com'
@@ -55662,6 +55571,7 @@ dns:
     - '+.kjzx.net'
     - '+.kjzxtk.com'
     - '+.kk-china.com'
+    - '+.kk-rays.com'
     - '+.kk1.vip'
     - '+.kk169.com'
     - '+.kk30.com'
@@ -55972,7 +55882,6 @@ dns:
     - '+.kopperchem.com'
     - '+.koreabt.com'
     - '+.koreavisa-wh.com'
-    - '+.korirl.com'
     - '+.kormee.com'
     - '+.kornsweets.com'
     - '+.koronsoft.com'
@@ -56929,6 +56838,7 @@ dns:
     - '+.lampbi.com'
     - '+.lampouomo.com'
     - '+.lamyu.com'
+    - '+.lan'
     - '+.lan-bridge.com'
     - '+.lan-lin.com'
     - '+.lan-ning.com'
@@ -57734,6 +57644,7 @@ dns:
     - '+.leihuo.net'
     - '+.leijue.net'
     - '+.leijun.com'
+    - '+.leike.cc'
     - '+.leikeji.com'
     - '+.leileiluoluo.com'
     - '+.leilong158.com'
@@ -58866,6 +58777,7 @@ dns:
     - '+.linzihy.com'
     - '+.lion1ou.tech'
     - '+.lionaka.com'
+    - '+.liongege.com'
     - '+.lionit.net'
     - '+.lionkingsoft.com'
     - '+.lionmac.com'
@@ -59438,8 +59350,13 @@ dns:
     - '+.loac.cc'
     - '+.loadingbay.com'
     - '+.loansliml.com'
+    - '+.local'
     - '+.local-ip.online'
     - '+.local.hk'
+    - '+.localdomain'
+    - '+.localhost'
+    - '+.localhost.ptlogin2.qq.com'
+    - '+.localhost.sec.qq.com'
     - '+.localxcafe.com'
     - '+.locatran.com'
     - '+.locez.com'
@@ -59687,6 +59604,7 @@ dns:
     - '+.lookvin.com'
     - '+.loome.net'
     - '+.loonapp.com'
+    - '+.loong1.com'
     - '+.loong3d.com'
     - '+.loongdriving.com'
     - '+.loongnix.com'
@@ -59792,6 +59710,7 @@ dns:
     - '+.lovgiin.com'
     - '+.lovol.com'
     - '+.lovology.com'
+    - '+.lowpowersemi.com'
     - '+.loxpo.com'
     - '+.loyalvalleycapital.com'
     - '+.loyar.com'
@@ -60093,6 +60012,7 @@ dns:
     - '+.luckyair.net'
     - '+.luckychipsmaster.com'
     - '+.luckycoffee.com'
+    - '+.luckycup.com'
     - '+.luckyop.com'
     - '+.luckyuyin.com'
     - '+.luckyxp.net'
@@ -60508,6 +60428,7 @@ dns:
     - '+.lxtuyoo.com'
     - '+.lxtuyoogame.com'
     - '+.lxtuyou.com'
+    - '+.lxtx777.com'
     - '+.lxway.com'
     - '+.lxway.net'
     - '+.lxwlcn.com'
@@ -61497,6 +61418,7 @@ dns:
     - '+.markdown.xyz'
     - '+.markdream.com'
     - '+.markedboat.com'
+    - '+.market.xiaomi.com'
     - '+.marketingconv.com'
     - '+.marketingforce.com'
     - '+.markfairwhale.com'
@@ -61887,6 +61809,7 @@ dns:
     - '+.me-city.com'
     - '+.me-game.com'
     - '+.me-tencent.com'
+    - '+.me.news'
     - '+.me1.ltd'
     - '+.me360.com'
     - '+.me361.com'
@@ -61919,6 +61842,7 @@ dns:
     - '+.medebound.com'
     - '+.medejob.com'
     - '+.medeming.com'
+    - '+.media.dssott.com'
     - '+.mediaainet.com'
     - '+.mediastory.cc'
     - '+.mediatek.com'
@@ -62701,6 +62625,7 @@ dns:
     - '+.microcardio.com'
     - '+.microchampion.com'
     - '+.microdiag.com'
+    - '+.microdiode.com'
     - '+.microdreams.com'
     - '+.microfotos.com'
     - '+.microfountain.com'
@@ -63830,6 +63755,7 @@ dns:
     - '+.moshengliang.com'
     - '+.moshou.com'
     - '+.moshuai.cc'
+    - '+.moshuiai.com'
     - '+.mosoga.net'
     - '+.mossimo.net'
     - '+.mossle.com'
@@ -63907,6 +63833,7 @@ dns:
     - '+.mozhan.com'
     - '+.mozhedun.com'
     - '+.mozhenhau.com'
+    - '+.mozhenzhen.com'
     - '+.mozichina.com'
     - '+.mozigu.net'
     - '+.mozillazg.com'
@@ -63972,7 +63899,6 @@ dns:
     - '+.mrjjxw.com'
     - '+.mrlian.club'
     - '+.mrlika.com'
-    - '+.mrlxc51byo.com'
     - '+.mrmfsc.ltd'
     - '+.mro365.com'
     - '+.mro9.com'
@@ -64015,6 +63941,8 @@ dns:
     - '+.msdprc.com'
     - '+.msdprod-ad.download.prss.microsoft.com'
     - '+.msfpay.com'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
     - '+.msftonlinelab.com'
     - '+.msg.work'
     - '+.msgamego.com'
@@ -64373,6 +64301,7 @@ dns:
     - '+.my-ndns.com'
     - '+.my-qcloud.com'
     - '+.my-tcloud.com'
+    - '+.my.router'
     - '+.my.st.com'
     - '+.my0511.com'
     - '+.my0511.net'
@@ -64787,6 +64716,7 @@ dns:
     - '+.mzzyk.com'
     - '+.n-bros.net'
     - '+.n.biz'
+    - '+.n0808.com'
     - '+.n0vadesktop.com'
     - '+.n12345.com'
     - '+.n1b.com'
@@ -64960,6 +64890,7 @@ dns:
     - '+.nanningxiaoou.com'
     - '+.nanningyouhua.com'
     - '+.nannjlnk.com'
+    - '+.nano-trix.com'
     - '+.nanobody-biolab.com'
     - '+.nanochrom.com'
     - '+.nanoeast.net'
@@ -65770,6 +65701,7 @@ dns:
     - '+.nhzs.com'
     - '+.ni8.com'
     - '+.ni93.com'
+    - '+.nia-teams.com'
     - '+.nianchu.net'
     - '+.nianhuawan.com'
     - '+.niankawang.com'
@@ -66289,7 +66221,6 @@ dns:
     - '+.njnewgreen.com'
     - '+.njnfwl.com'
     - '+.njnhsx.net'
-    - '+.njnhyx.net'
     - '+.njnii.com'
     - '+.njningyi.com'
     - '+.njnkxt.com'
@@ -68132,6 +68063,7 @@ dns:
     - '+.opfibre.com'
     - '+.opgw-oppc.com'
     - '+.opinstallinit.com'
+    - '+.opinstallres.com'
     - '+.opjmw1.ren'
     - '+.opkjh.com'
     - '+.oplay.net'
@@ -68194,10 +68126,12 @@ dns:
     - '+.orangevip.com'
     - '+.oraper.com'
     - '+.orasos.com'
+    - '+.oray.com'
     - '+.oray.net'
     - '+.oraybox.com'
     - '+.oraycn.com'
     - '+.orayer.com'
+    - '+.orayimg.com'
     - '+.orbiepharm.com'
     - '+.orbitmes.com'
     - '+.orbrand.com'
@@ -69171,6 +69105,7 @@ dns:
     - '+.peijian8.net'
     - '+.peilian.com'
     - '+.peiluming.com'
+    - '+.peiluyou.com'
     - '+.peipusci.com'
     - '+.peise.net'
     - '+.peisebiao.com'
@@ -69376,6 +69311,7 @@ dns:
     - '+.phezzan.com'
     - '+.phhongyu.com'
     - '+.phicomm.com'
+    - '+.phicomm.me'
     - '+.philipswechat.com'
     - '+.philisense.com'
     - '+.phirda.com'
@@ -69852,6 +69788,7 @@ dns:
     - '+.plctlab.com'
     - '+.plentypolymer.com'
     - '+.plesk-cn.com'
+    - '+.plex.direct'
     - '+.plex2.com'
     - '+.plexpt.com'
     - '+.plfrog.com'
@@ -69860,6 +69797,7 @@ dns:
     - '+.plob.org'
     - '+.plopco.com'
     - '+.plottersyservicioshdz.com'
+    - '+.plovercrest.com'
     - '+.plsbd.com'
     - '+.plsdeyy.com'
     - '+.plsfybjy.com'
@@ -69941,6 +69879,7 @@ dns:
     - '+.pnzpw.com'
     - '+.pnzxyy.com'
     - '+.po.co'
+    - '+.po1c0tw4b2.com'
     - '+.po7ryumvkx34.com'
     - '+.pobaby.net'
     - '+.pobasoft.com'
@@ -70024,6 +69963,7 @@ dns:
     - '+.pookcdn.com'
     - '+.pookcdn.net'
     - '+.pooketools.com'
+    - '+.pool.ntp.org'
     - '+.poorren.com'
     - '+.pop-bags.com'
     - '+.pop-fashion.com'
@@ -70247,6 +70187,7 @@ dns:
     - '+.ppwang.com'
     - '+.ppwenda.com'
     - '+.ppwfa.com'
+    - '+.ppwfund.com'
     - '+.ppwow.cc'
     - '+.ppwwyyxx.com'
     - '+.ppx520.com'
@@ -70485,6 +70426,7 @@ dns:
     - '+.puai999.com'
     - '+.puaihospital.net'
     - '+.puata.info'
+    - '+.pub.3gppnetwork.org'
     - '+.pubbcsapp.com'
     - '+.pubchn.com'
     - '+.pubg.plus'
@@ -70740,7 +70682,6 @@ dns:
     - '+.pzfc.com'
     - '+.pzfcw.com'
     - '+.pzhccb.com'
-    - '+.pzhdahe.com'
     - '+.pzhedu.com'
     - '+.pzhl.net'
     - '+.pzhol.com'
@@ -70823,7 +70764,6 @@ dns:
     - '+.qc6.com'
     - '+.qc99.com'
     - '+.qca.org'
-    - '+.qcaipiao.com'
     - '+.qcbaas.com'
     - '+.qcbone.com'
     - '+.qcc.com'
@@ -71125,6 +71065,7 @@ dns:
     - '+.qh24.com'
     - '+.qh4321.com'
     - '+.qh6bc.com'
+    - '+.qh7ptb6mc.com'
     - '+.qhangyun.com'
     - '+.qhass.org'
     - '+.qhball.com'
@@ -71748,6 +71689,7 @@ dns:
     - '+.qingshuxuetang.com'
     - '+.qingsongchou.com'
     - '+.qingsongjituan.com'
+    - '+.qingsongzhuan.online'
     - '+.qingsonngxx.com'
     - '+.qingstor.com'
     - '+.qingtaoke.com'
@@ -72385,6 +72327,7 @@ dns:
     - '+.qqwmly.com'
     - '+.qqwwr.com'
     - '+.qqwys.net'
+    - '+.qqx.me'
     - '+.qqxmail.com'
     - '+.qqxsnew.net'
     - '+.qqxsnew5.com'
@@ -73027,6 +72970,7 @@ dns:
     - '+.quxds.com'
     - '+.quxianchang.com'
     - '+.quxiang.work'
+    - '+.quxianzhan.com'
     - '+.quxianzhuan.com'
     - '+.quxiaxia.com'
     - '+.quxingdong.com'
@@ -73955,6 +73899,7 @@ dns:
     - '+.resemi.com'
     - '+.reservehemu.com'
     - '+.resheji.com'
+    - '+.reshg.com'
     - '+.resistor.today'
     - '+.resnics.com'
     - '+.resona-wujl.com'
@@ -74473,6 +74418,7 @@ dns:
     - '+.roushidongwu.com'
     - '+.rousin.com'
     - '+.route78asia.com'
+    - '+.router.ctc'
     - '+.routerclub.com'
     - '+.routeryun.com'
     - '+.routewize.com'
@@ -75199,6 +75145,7 @@ dns:
     - '+.sanabuy.com'
     - '+.sanaemio.com'
     - '+.sanan-e.com'
+    - '+.sanan-semiconductor.com'
     - '+.sananyiliao.com'
     - '+.sanau.com'
     - '+.sanbaiyun.com'
@@ -75212,6 +75159,7 @@ dns:
     - '+.sanchuangke.com'
     - '+.sancov.com'
     - '+.sandaha.com'
+    - '+.sandai.net'
     - '+.sandbean.com'
     - '+.sandcomp.com'
     - '+.sandeepin.com'
@@ -77935,6 +77883,7 @@ dns:
     - '+.shhyhy.com'
     - '+.shhzcj.com'
     - '+.shi-ming.com'
+    - '+.shiabank.com'
     - '+.shianzhixuan.com'
     - '+.shibaili.com'
     - '+.shibangchina.com'
@@ -78130,6 +78079,7 @@ dns:
     - '+.shirenzuojia.com'
     - '+.shiritianchengtech.com'
     - '+.shirongzhaoye.com'
+    - '+.shirui3.com'
     - '+.shisanzhi.com'
     - '+.shiseidochina.com'
     - '+.shishacharcoal.net'
@@ -78347,7 +78297,6 @@ dns:
     - '+.shootmedia.net'
     - '+.shop-isv.com'
     - '+.shop.globalsign.com'
-    - '+.shop265.com'
     - '+.shop2cn.com'
     - '+.shopbackdrop.com'
     - '+.shopchaoren.com'
@@ -78789,7 +78738,6 @@ dns:
     - '+.shujubang.com'
     - '+.shujubo.com'
     - '+.shujujishi.com'
-    - '+.shujulin.com'
     - '+.shujupie.com'
     - '+.shujutang.com'
     - '+.shujuwa.net'
@@ -79787,6 +79735,7 @@ dns:
     - '+.sjzqcrl.com'
     - '+.sjzrbapp.com'
     - '+.sjzrmyz.com'
+    - '+.sjzsnncs.com'
     - '+.sjzswtz.com'
     - '+.sjzszz.com'
     - '+.sjztd.com'
@@ -80087,6 +80036,7 @@ dns:
     - '+.smcec.com'
     - '+.smcic.net'
     - '+.smcsrj.com'
+    - '+.smcyh.com'
     - '+.smd-automation.com'
     - '+.smd88.com'
     - '+.smdcn.net'
@@ -81046,6 +80996,7 @@ dns:
     - '+.srt365.com'
     - '+.srtong.com'
     - '+.srun.com'
+    - '+.srv.nintendo.net'
     - '+.srw00.com'
     - '+.srworld.net'
     - '+.srx3.net'
@@ -81344,6 +81295,7 @@ dns:
     - '+.steamboxs.com'
     - '+.steamchina.com'
     - '+.steamcn.com'
+    - '+.steamcontent.com'
     - '+.steamdd.com'
     - '+.steamdt.com'
     - '+.steamgift.site'
@@ -81487,6 +81439,10 @@ dns:
     - '+.stulip.org'
     - '+.stuliving.com'
     - '+.stuln.com'
+    - '+.stun.*.*'
+    - '+.stun.*.*.*'
+    - '+.stun.*.*.*.*'
+    - '+.stun.*.*.*.*.*'
     - '+.stunnel.vip'
     - '+.stupid77.com'
     - '+.stupidet.com'
@@ -81718,6 +81674,7 @@ dns:
     - '+.sunbowhospital.com'
     - '+.sunboxsoft.com'
     - '+.sunboyu.com'
+    - '+.suncd.com'
     - '+.suncereltd.com'
     - '+.suncjm.com'
     - '+.sundan.com'
@@ -83215,6 +83172,7 @@ dns:
     - '+.szpowerfly.com'
     - '+.szpra.com'
     - '+.szprl.com'
+    - '+.szpro360.com'
     - '+.szptxx.com'
     - '+.szputy.com'
     - '+.szqf.org'
@@ -84662,6 +84620,7 @@ dns:
     - '+.tencentdb.com'
     - '+.tencentddos.com'
     - '+.tencentdevices.com'
+    - '+.tencentdi.com'
     - '+.tencentdigitalassistant.com'
     - '+.tencentdmp.com'
     - '+.tencentdms.com'
@@ -84751,6 +84710,7 @@ dns:
     - '+.tencity.com'
     - '+.tendacn.com'
     - '+.tendata.net'
+    - '+.tendawifi.com'
     - '+.tendbcluster.com'
     - '+.tendbcluster.net'
     - '+.tendcloud.com'
@@ -84877,6 +84837,7 @@ dns:
     - '+.tesiro.com'
     - '+.tesolsh.com'
     - '+.tesoon.com'
+    - '+.test'
     - '+.test-cignacmb.com'
     - '+.testbird.com'
     - '+.testcoo.com'
@@ -85810,6 +85771,7 @@ dns:
     - '+.tjqq.cc'
     - '+.tjrenliziyuan.com'
     - '+.tjrenmu.com'
+    - '+.tjrywlkj.online'
     - '+.tjrzzl.com'
     - '+.tjship.com'
     - '+.tjsjnxh.com'
@@ -86040,6 +86002,7 @@ dns:
     - '+.tmjj.com'
     - '+.tmjob88.com'
     - '+.tmkoo.com'
+    - '+.tmlyun.com'
     - '+.tmoxrobot.com'
     - '+.tmqd.me'
     - '+.tmqmqj.com'
@@ -86150,6 +86113,7 @@ dns:
     - '+.tokenglish.com'
     - '+.tokenrhythm.studio'
     - '+.tokensky.net'
+    - '+.tokentracker.cc'
     - '+.tokimekiclub.org'
     - '+.tol24.com'
     - '+.tom.com'
@@ -86606,6 +86570,7 @@ dns:
     - '+.tpkey.com'
     - '+.tplcd100.com'
     - '+.tplife.com'
+    - '+.tplinkwifi.net'
     - '+.tplogincn.com'
     - '+.tpooo.com'
     - '+.tpoxiaozhan.com'
@@ -86675,6 +86640,7 @@ dns:
     - '+.tracyclass.com'
     - '+.tradaquan.com'
     - '+.tradeblazer.net'
+    - '+.tradeflow.chat'
     - '+.tradeleo.com'
     - '+.trademanager.com'
     - '+.trademessenger.com'
@@ -86892,6 +86858,7 @@ dns:
     - '+.ts-marathon.com'
     - '+.ts-precision.com'
     - '+.ts.cc'
+    - '+.ts.net'
     - '+.ts0775.com'
     - '+.ts100.com'
     - '+.ts166.net'
@@ -87380,6 +87347,8 @@ dns:
     - '+.tushumi.cc'
     - '+.tushumi.com'
     - '+.tushuokeji.net'
+    - '+.tusiart.com'
+    - '+.tusiassets.com'
     - '+.tusij.com'
     - '+.tusiot.com'
     - '+.tusmedicine.com'
@@ -87649,6 +87618,7 @@ dns:
     - '+.tydns.cc'
     - '+.tyduanju.com'
     - '+.tyeat.com'
+    - '+.tyedo.com'
     - '+.tyeec.net'
     - '+.tyepi.com'
     - '+.tyfo.com'
@@ -88656,6 +88626,7 @@ dns:
     - '+.uu-baidu.com'
     - '+.uu-proxy.com'
     - '+.uu-xs.net'
+    - '+.uu.163.com'
     - '+.uu.cc'
     - '+.uu1.com'
     - '+.uu11.com'
@@ -89270,6 +89241,7 @@ dns:
     - '+.vip120.com'
     - '+.vip1280.net'
     - '+.vip150.com'
+    - '+.vip166.com'
     - '+.vip3659k.com'
     - '+.vip7337.com'
     - '+.vip7787.com'
@@ -90031,6 +90003,7 @@ dns:
     - '+.wagen.cc'
     - '+.waha.cc'
     - '+.wahahakid.org'
+    - '+.wahbouproduct.com'
     - '+.waheaven.com'
     - '+.wahlap.com'
     - '+.wahlap.net'
@@ -90503,6 +90476,7 @@ dns:
     - '+.warchina.com'
     - '+.warcraftchina.com'
     - '+.warframeofficial.com'
+    - '+.wargaming.net'
     - '+.warhammertech.com'
     - '+.warmchina121.com'
     - '+.warmjar.com'
@@ -90774,6 +90748,7 @@ dns:
     - '+.webankwyd.com'
     - '+.webarcx.com'
     - '+.webcamx666.com'
+    - '+.webclose-whatsapp.com'
     - '+.webdissector.com'
     - '+.webetter-ad.com'
     - '+.webfalse.com'
@@ -91330,6 +91305,7 @@ dns:
     - '+.wendougee.com'
     - '+.wendu.com'
     - '+.wenduedu.com'
+    - '+.wenduoduo.com'
     - '+.wenfangcn.com'
     - '+.wenfangjushe.com'
     - '+.wenfangnet.com'
@@ -91605,6 +91581,7 @@ dns:
     - '+.wg999.com'
     - '+.wgc2025.com'
     - '+.wgce.space'
+    - '+.wggames.cn'
     - '+.wghai.net'
     - '+.wghaos.com'
     - '+.wghostk.com'
@@ -91808,6 +91785,7 @@ dns:
     - '+.whidf.com'
     - '+.whidy.net'
     - '+.whiie-expo.com'
+    - '+.whinbrook.com'
     - '+.whinfo.net'
     - '+.whir.net'
     - '+.whisperto.net'
@@ -92902,6 +92880,7 @@ dns:
     - '+.woskj2.com'
     - '+.wotangka.com'
     - '+.wotaoka.com'
+    - '+.wotgame.cn'
     - '+.wotingpingshu.com'
     - '+.wotokol.com'
     - '+.wotransfer.com'
@@ -92935,6 +92914,7 @@ dns:
     - '+.wowoyou.net'
     - '+.wowozhe.com'
     - '+.wowqu.cc'
+    - '+.wowsgame.cn'
     - '+.wowtb.com'
     - '+.wowtran.com'
     - '+.woxian.com'
@@ -93549,7 +93529,6 @@ dns:
     - '+.wwejds.com'
     - '+.wwenglish.com'
     - '+.wwenglish.org'
-    - '+.wwentua.com'
     - '+.wwfchina.org'
     - '+.wwhlian.com'
     - '+.wwjie.com'
@@ -95822,6 +95801,7 @@ dns:
     - '+.xingyunb.com'
     - '+.xingyunba.com'
     - '+.xingyungroup.com'
+    - '+.xingyunka.com'
     - '+.xingyunol.com'
     - '+.xingyusoft.net'
     - '+.xingyutc.com'
@@ -96872,6 +96852,7 @@ dns:
     - '+.xn--nyqy26a'
     - '+.xn--omrvgz6er31au6f.com'
     - '+.xn--otu796d'
+    - '+.xn--p3tw43cwvb.com'
     - '+.xn--p5t28ylet56a.com'
     - '+.xn--pss89e6xl72g.com'
     - '+.xn--ptua509t.com'
@@ -97341,6 +97322,7 @@ dns:
     - '+.xuebaclass.com'
     - '+.xuebaike.net'
     - '+.xuebangsoft.com'
+    - '+.xuebasou.com'
     - '+.xuebawang.net'
     - '+.xuecaijie.com'
     - '+.xuecan.net'
@@ -97415,6 +97397,7 @@ dns:
     - '+.xueshu5.com'
     - '+.xueshuda.com'
     - '+.xueshut.com'
+    - '+.xueshuweishi.com'
     - '+.xueshuwenhai.com'
     - '+.xuesongshuwood.com'
     - '+.xuesw.com'
@@ -97807,6 +97790,7 @@ dns:
     - '+.xxxmeng.com'
     - '+.xxxxxx6.com'
     - '+.xxxzzlm.org'
+    - '+.xxy-nirvana.com'
     - '+.xxy5hi7j.lol'
     - '+.xxycw.com'
     - '+.xxyeyan.com'
@@ -98632,6 +98616,7 @@ dns:
     - '+.yaypool.com'
     - '+.yayu.net'
     - '+.yayunjiqi.com'
+    - '+.yazhijian.com'
     - '+.yazhongzhuangshi.com'
     - '+.yazuo.com'
     - '+.yazx.net'
@@ -100834,6 +100819,7 @@ dns:
     - '+.yoozhe.com'
     - '+.yoozhibo.net'
     - '+.yoozoo.com'
+    - '+.yoplay.hk'
     - '+.yopoint.cc'
     - '+.yopoint.com'
     - '+.yoptech.com'
@@ -103126,6 +103112,7 @@ dns:
     - '+.zanig.com'
     - '+.zanih.com'
     - '+.zankee1955.com'
+    - '+.zanpc.com'
     - '+.zanpic.com'
     - '+.zanpu.com'
     - '+.zantainet.com'
@@ -103252,6 +103239,7 @@ dns:
     - '+.zbwbbs.com'
     - '+.zbwdj.com'
     - '+.zbwg.cc'
+    - '+.zbwhmedia.com'
     - '+.zbwmy.com'
     - '+.zbwpay.com'
     - '+.zbxcck.com'
@@ -103765,6 +103753,7 @@ dns:
     - '+.zglww.net'
     - '+.zglxw.com'
     - '+.zglyrc.com'
+    - '+.zglyun.com'
     - '+.zglyz.com'
     - '+.zgmba.com'
     - '+.zgmcxw.com'
@@ -104407,7 +104396,6 @@ dns:
     - '+.zhhaitai.com'
     - '+.zhheo.com'
     - '+.zhhfedu.com'
-    - '+.zhhlaw.com'
     - '+.zhhlogistics.com'
     - '+.zhhrm.com'
     - '+.zhhs-china.com'
@@ -104577,6 +104565,7 @@ dns:
     - '+.zhiliaocaibao.com'
     - '+.zhiliaoke.com'
     - '+.zhilidata.com'
+    - '+.zhiling.pw'
     - '+.zhilingshidai.com'
     - '+.zhilingshop.com'
     - '+.zhilitraffic.com'
@@ -106910,6 +106899,7 @@ dns:
     - '+.ztcpa.com'
     - '+.ztdgroup.com'
     - '+.ztdli.com'
+    - '+.zte.home'
     - '+.zte.net'
     - '+.ztedevice.com'
     - '+.ztedevices.com'
@@ -107066,6 +107056,7 @@ dns:
     - '+.zuiyou.com'
     - '+.zuiyouxi.com'
     - '+.zuizhifu.com'
+    - '+.zuizhinan.com'
     - '+.zuji360.com'
     - '+.zujiant.com'
     - '+.zujingpai.com'
@@ -107440,6 +107431,7 @@ dns:
     - '+.zyou100.com'
     - '+.zyoulun.com'
     - '+.zypharm.com'
+    - '+.zypiaojia.com'
     - '+.zyplayer.com'
     - '+.zyq.today'
     - '+.zyq366.com'
@@ -107656,7 +107648,6 @@ dns:
     - '+.zzwonder.com'
     - '+.zzwqqx.com'
     - '+.zzwro.com'
-    - '+.zzwtjx.com'
     - '+.zzwwiidd.com'
     - '+.zzwzj.com'
     - '+.zzxca.com'
@@ -107703,11 +107694,93 @@ dns:
     - '+.zzzyyy.com'
     - '+.zzzzaaaa.com'
     - '+.zzzzzz.me'
-  default-nameserver: *defaultDNS
-  proxy-server-nameserver: *proxyServerDNS
-  nameserver: *foreignDNS
-  direct-nameserver: *chinaDNS
+    - 'adguardteam.github.io'
+    - 'adrules.top'
+    - 'amobile.music.tc.qq.com'
+    - 'anti-ad.net'
+    - 'api-jooxtt.sanook.com'
+    - 'api.joox.com'
+    - 'aqqmusic.tc.qq.com'
+    - 'asusrouter.com'
+    - 'dl.stream.qqmusic.qq.com'
+    - 'ff.dorado.sdo.com'
+    - 'heartbeat.belkin.com'
+    - 'instant.arubanetworks.com'
+    - 'isure.stream.qqmusic.qq.com'
+    - 'joox.com'
+    - 'lens.l.google.com'
+    - 'local.adguard.org'
+    - 'localhost.*.weixin.qq.com'
+    - 'localhost.ptlogin2.qq.com'
+    - 'localhost.sec.qq.com'
+    - 'localhost.weixin.qq.com'
+    - 'localhost.work.weixin.qq.com'
+    - 'mesu.apple.com'
+    - 'mijia cloud'
+    - 'miwifi.com'
+    - 'mobileoc.music.tc.qq.com'
+    - 'music.163.com'
+    - 'music.migu.cn'
+    - 'music.taihe.com'
+    - 'musicapi.taihe.com'
+    - 'na.b.g-tun.com'
+    - 'ntp.*.com'
+    - 'ntp1.*.com'
+    - 'ntp2.*.com'
+    - 'ntp3.*.com'
+    - 'ntp4.*.com'
+    - 'ntp5.*.com'
+    - 'ntp6.*.com'
+    - 'ntp7.*.com'
+    - 'oasisauth.h3c.com'
+    - 'proxy.golang.org'
+    - 'ps.res.netease.com'
+    - 'router.asus.com'
+    - 'routerlogin.com'
+    - 'setmeup.arubanetworks.com'
+    - 'shark007.net'
+    - 'songsearch.kugou.com'
+    - 'static.adtidy.org'
+    - 'streamoc.music.tc.qq.com'
+    - 'swcdn.apple.com'
+    - 'swdist.apple.com'
+    - 'swdownload.apple.com'
+    - 'swquery.apple.com'
+    - 'swscan.apple.com'
+    - 'time-ios.apple.com'
+    - 'time.*.apple.com'
+    - 'time.*.com'
+    - 'time.*.edu.cn'
+    - 'time.*.gov'
+    - 'time1.*.com'
+    - 'time1.cloud.tencent.com'
+    - 'time2.*.com'
+    - 'time3.*.com'
+    - 'time4.*.com'
+    - 'time5.*.com'
+    - 'time6.*.com'
+    - 'time7.*.com'
+    - 'tplogin.cn'
+    - 'trackercdn.kugou.com'
+    - 'www.asusrouter.com'
+    - 'www.miwifi.com'
+    - 'www.routerlogin.com'
+    - 'xbox.*.*.microsoft.com'
+    - 'xbox.*.microsoft.com'
+    - 'xnotify.xboxlive.com'
+    - 'y.qq.com'
+  # 国内外 DNS 定义
+  default-nameserver: &defaultDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
+  proxy-server-nameserver: &proxyServerDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
+  # 为特定节点域名单独指定直连 DNS；使用时替换示例域名和地址。
+  # proxy-server-nameserver-policy:
+  #   '+.nodes.example': ['192.168.1.1']
+  nameserver:
+    &foreignDNS ['https://cloudflare-dns.com/dns-query?proxy=默认代理', 'https://dns.google/dns-query?proxy=默认代理']
+  direct-nameserver: &chinaDNS ['tls://119.29.29.29', 'tls://223.5.5.5']
   direct-nameserver-follow-policy: true
+  # 严格隔离策略命中的域名解析，防止失败时回退并泄露到国外默认 DNS。
+  nameserver-policy-exclusive: true
   nameserver-policy:
     # 域名覆盖项放在规则集之前；内核按文档中的匹配块顺序选择 DNS。
     '+.ctaiot.com': *chinaDNS
@@ -107732,27 +107805,37 @@ hosts:
 # 按需在 Nyanpasu 中启用；auto-route: true 全局接管，'fake-ip' 仅接管 Fake-IP。
 tun:
   enable: false
+  # stack: lwip # 可选 lwip / system / mixed（Linux 下 mixed 与 system 同走内核 TCP 栈，非 Linux 回落 lwip）
   auto-route: true
+  # inet6-address: 'fdfe:dcba:9876::1/126' # IPv6 全局 TUN 启用时填写
   dns-hijack: ['any:53']
+
+# 可选协议嗅探：如需对直连 IP 流量提取域名（支持 TLS / HTTP / QUIC），取消注释启用。
+# sniffer:
+#   enable: true
+#   parse-pure-ip: true
+#   override-destination: false
+#   sniff:
+#     TLS:
+#       ports: [443]
+#     HTTP:
+#       ports: [80, 8080-8880]
+#     QUIC:
+#       ports: [443]
 
 # --- 规则集 ---
 
 # Rule Provider 通用配置
-rule_providers_common:
-  rule_providers_domain:
-    &rule_providers_domain { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: domain }
-  rule_providers_ip: &rule_providers_ip { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: ipcidr }
-
 # 定义 Rule Providers
 rule-providers:
   # --- 直连规则集 ---
 
   private:
-    <<: *rule_providers_domain
+    <<: &rule_providers_domain { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: domain }
     url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/private.mrs'
     path: './ruleset/private.mrs'
   private_ip:
-    <<: *rule_providers_ip
+    <<: &rule_providers_ip { type: http, format: mrs, interval: 86400, proxy: DIRECT, behavior: ipcidr }
     url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/private.mrs'
     path: './ruleset/private_ip.mrs'
   games_cn:
@@ -107839,98 +107922,10 @@ rule-providers:
 
 # 策略组通用配置
 # 无匹配节点的 provider 组会连接失败，不会回退直连。
-group_common:
-  group_common_select: &group_common_select { type: select }
-
-  group_common_auto:
-    &group_common_auto {
-      type: url-test,
-      interval: 600,
-      url: 'https://www.apple.com/library/test/success.html',
-      lazy: true,
-      tolerance: 50,
-      include-all: true,
-      exclude-type: 'DIRECT',
-      icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Auto.svg',
-      hidden: true,
-    }
-
-# 通用代理节点组
-proxies_common:
-  proxies_default:
-    &proxies_default {
-      proxies:
-        [
-          '默认代理',
-          '手动选择',
-          '自动选择',
-          '香港',
-          '日本',
-          '美国',
-          '新加坡',
-          '台湾',
-          '低倍率节点',
-          '高倍率节点',
-          '家宽节点',
-          '其他节点',
-        ],
-    }
-
-  proxies_direct:
-    &proxies_direct {
-      proxies:
-        [
-          '默认代理',
-          '手动选择',
-          '自动选择',
-          '直连',
-          '香港',
-          '日本',
-          '美国',
-          '新加坡',
-          '台湾',
-          '低倍率节点',
-          '高倍率节点',
-          '家宽节点',
-          '其他节点',
-        ],
-    }
-
-  proxies_reject: &proxies_reject { proxies: ['REJECT', 'REJECT-DROP', 'PASS'] }
-
-# 地区过滤器正则表达式定义
-# 分组过滤使用 Rust 正则和显式边界，不使用环视；YAML 单引号中反斜杠只写一次。
-# 低倍率按数值、免费/低倍、下载等名称匹配；下载分支排除“客户端/软件”。
-group_filter:
-  HK_filter: &HK_filter { filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong)' }
-  JP_filter: &JP_filter { filter: '(?i)(🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan)' }
-  US_filter:
-    &US_filter {
-      filter: '(?i)(🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states)',
-    }
-  SG_filter: &SG_filter { filter: '(?i)(🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore)' }
-  TW_filter: &TW_filter { filter: '(?i)(🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)' }
-  low_filter:
-    &low_filter {
-      filter: '(?i)(^(?:[^剩期]*[^\d.剩期])?0(?:\.[0-5]|[*×✕✖⨯⨉x倍])[^剩期]*$|[*×✕✖⨯⨉x]0|^(?:[^客软]|软+[^件客软]|软*客(?:客|户客|户?软+客)*(?:[^客户软]|户[^客端软]|户?软+[^件客软]))*(?:软*|软*客(?:客|户客|户?软+客)*(?:户?|户?软+))下载(?:[^客软]|软+[^件客软]|软*客(?:客|户客|户?软+客)*(?:[^客户软]|户[^客端软]|户?软+[^件客软]))*(?:软*|软*客(?:客|户客|户?软+客)*(?:户?|户?软+))$|低倍|免费|(?:^|[^A-Za-z])free(?:$|[^A-Za-z]))',
-    }
-  high_filter:
-    &high_filter {
-      filter: '(?i)(?:[*×✕✖⨯⨉x](?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?)|(?:(?:^|[^\d.])(?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?(?:倍|[*×✕✖⨯⨉x]))',
-    }
-  home_filter:
-    &home_filter {
-      filter: '(?i)(家宽|住宅|原生\s*IP|家庭宽带|(?:^|[^A-Za-z0-9_])(?:ISP|RES)(?:$|[^A-Za-z0-9_])|residential)',
-    }
-  exclude_filter:
-    &exclude_filter {
-      exclude-filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong|🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan|🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore|🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)',
-    }
-
 # 定义分流策略组
 proxy-groups:
   - name: '默认代理'
-    <<: *group_common_select
+    <<: &group_common_select { type: select }
     proxies:
       [
         '香港',
@@ -107954,10 +107949,42 @@ proxy-groups:
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Static.svg'
 
   - name: '自动选择'
-    <<: *group_common_auto
+    <<:
+      &group_common_auto {
+        type: url-test,
+        interval: 600,
+        url: 'https://www.apple.com/library/test/success.html',
+        lazy: true,
+        tolerance: 50,
+        include-all: true,
+        exclude-type: 'DIRECT',
+        icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Auto.svg',
+        hidden: true,
+      }
 
+  # 通用代理节点组
   - name: 'Google'
-    <<: [*group_common_select, *proxies_default]
+    <<:
+      [
+        *group_common_select,
+        &proxies_default {
+          proxies:
+            [
+              '默认代理',
+              '手动选择',
+              '自动选择',
+              '香港',
+              '日本',
+              '美国',
+              '新加坡',
+              '台湾',
+              '低倍率节点',
+              '高倍率节点',
+              '家宽节点',
+              '其他节点',
+            ],
+        },
+      ]
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Google.svg'
 
   - name: 'AI'
@@ -107988,11 +108015,32 @@ proxy-groups:
     icon: 'https://fastly.jsdelivr.net/gh/TheSixPasserby/MyClash@main/Icons/svg/Discord.svg'
 
   - name: 'Steam'
-    <<: [*group_common_select, *proxies_direct]
+    <<:
+      [
+        *group_common_select,
+        &proxies_direct {
+          proxies:
+            [
+              '默认代理',
+              '手动选择',
+              '自动选择',
+              '直连',
+              '香港',
+              '日本',
+              '美国',
+              '新加坡',
+              '台湾',
+              '低倍率节点',
+              '高倍率节点',
+              '家宽节点',
+              '其他节点',
+            ],
+        },
+      ]
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Steam.svg'
 
   - name: 'AdBlock'
-    <<: [*group_common_select, *proxies_reject]
+    <<: [*group_common_select, &proxies_reject { proxies: ['REJECT', 'REJECT-DROP', 'PASS'] }]
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/AdBlock.svg'
 
   - name: '漏网之鱼'
@@ -108006,8 +108054,11 @@ proxy-groups:
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/China.svg'
 
   # 定义地区策略组
+  # 地区过滤器正则表达式定义
+  # 分组过滤使用 Rust 正则和显式边界，不使用环视；YAML 单引号中反斜杠只写一次。
+  # 低倍率按数值、免费/低倍、下载等名称匹配；下载分支排除“客户端/软件”。
   - name: '香港'
-    <<: [*group_common_select, *HK_filter]
+    <<: [*group_common_select, &HK_filter { filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong)' }]
     include-all: true
     proxies: ['香港-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/HongKong.svg'
@@ -108015,7 +108066,11 @@ proxy-groups:
     <<: [*group_common_auto, *HK_filter]
 
   - name: '日本'
-    <<: [*group_common_select, *JP_filter]
+    <<:
+      [
+        *group_common_select,
+        &JP_filter { filter: '(?i)(🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan)' },
+      ]
     include-all: true
     proxies: ['日本-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Japan.svg'
@@ -108023,7 +108078,13 @@ proxy-groups:
     <<: [*group_common_auto, *JP_filter]
 
   - name: '美国'
-    <<: [*group_common_select, *US_filter]
+    <<:
+      [
+        *group_common_select,
+        &US_filter {
+          filter: '(?i)(🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states)',
+        },
+      ]
     include-all: true
     proxies: ['美国-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/America.svg'
@@ -108031,7 +108092,8 @@ proxy-groups:
     <<: [*group_common_auto, *US_filter]
 
   - name: '新加坡'
-    <<: [*group_common_select, *SG_filter]
+    <<:
+      [*group_common_select, &SG_filter { filter: '(?i)(🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore)' }]
     include-all: true
     proxies: ['新加坡-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Singapore.svg'
@@ -108039,7 +108101,8 @@ proxy-groups:
     <<: [*group_common_auto, *SG_filter]
 
   - name: '台湾'
-    <<: [*group_common_select, *TW_filter]
+    <<:
+      [*group_common_select, &TW_filter { filter: '(?i)(🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)' }]
     include-all: true
     proxies: ['台湾-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Taiwan.svg'
@@ -108047,7 +108110,13 @@ proxy-groups:
     <<: [*group_common_auto, *TW_filter]
 
   - name: '低倍率节点'
-    <<: [*group_common_select, *low_filter]
+    <<:
+      [
+        *group_common_select,
+        &low_filter {
+          filter: '(?i)(^(?:[^剩期]*[^\d.剩期])?0(?:\.[0-5]|[*×✕✖⨯⨉x倍])[^剩期]*$|[*×✕✖⨯⨉x]0|^(?:[^客软]|软+[^件客软]|软*客(?:客|户客|户?软+客)*(?:[^客户软]|户[^客端软]|户?软+[^件客软]))*(?:软*|软*客(?:客|户客|户?软+客)*(?:户?|户?软+))下载(?:[^客软]|软+[^件客软]|软*客(?:客|户客|户?软+客)*(?:[^客户软]|户[^客端软]|户?软+[^件客软]))*(?:软*|软*客(?:客|户客|户?软+客)*(?:户?|户?软+))$|低倍|免费|(?:^|[^A-Za-z])free(?:$|[^A-Za-z]))',
+        },
+      ]
     include-all: true
     proxies: ['低倍率节点-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Available.svg'
@@ -108055,7 +108124,13 @@ proxy-groups:
     <<: [*group_common_auto, *low_filter]
 
   - name: '高倍率节点'
-    <<: [*group_common_select, *high_filter]
+    <<:
+      [
+        *group_common_select,
+        &high_filter {
+          filter: '(?i)(?:[*×✕✖⨯⨉x](?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?)|(?:(?:^|[^\d.])(?:[2-9]\d*|[1-9]\d+)(?:\.\d+)?(?:倍|[*×✕✖⨯⨉x]))',
+        },
+      ]
     include-all: true
     proxies: ['高倍率节点-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Airport.svg'
@@ -108063,7 +108138,13 @@ proxy-groups:
     <<: [*group_common_auto, *high_filter]
 
   - name: '家宽节点'
-    <<: [*group_common_select, *home_filter]
+    <<:
+      [
+        *group_common_select,
+        &home_filter {
+          filter: '(?i)(家宽|住宅|原生\s*IP|家庭宽带|(?:^|[^A-Za-z0-9_])(?:ISP|RES)(?:$|[^A-Za-z0-9_])|residential)',
+        },
+      ]
     include-all: true
     proxies: ['家宽节点-自动选择']
     icon: 'https://fastly.jsdelivr.net/gh/AIsouler/MyClash@main/Icons/svg/Home.svg'
@@ -108071,7 +108152,13 @@ proxy-groups:
     <<: [*group_common_auto, *home_filter]
 
   - name: '其他节点'
-    <<: [*group_common_select, *exclude_filter]
+    <<:
+      [
+        *group_common_select,
+        &exclude_filter {
+          exclude-filter: '(?i)(🇭🇰|香港|(?:^|[^A-Za-z])HKG?(?:$|[^A-Za-z])|hong\s*kong|🇯🇵|日本|东京|大阪|京都|(?:^|[^A-Za-z])JPN?(?:$|[^A-Za-z])|japan|🇺🇸|美国|纽约|洛杉矶|旧金山|芝加哥|休斯顿|迈阿密|西雅图|波士顿|华盛顿|拉斯维加斯|圣何塞|(?:^|[^A-Za-z])USA?(?:$|[^A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|(?:^|[^A-Za-z])SGP?(?:$|[^A-Za-z])|singapore|🇹🇼|台湾|台北|高雄|(?:^|[^A-Za-z])TWN?(?:$|[^A-Za-z])|taiwan)',
+        },
+      ]
     include-all: true
     exclude-type: 'DIRECT'
     proxies: ['其他节点-自动选择']
@@ -108082,6 +108169,9 @@ proxy-groups:
 # --- 路由规则 (Rules) ---
 
 rules:
+  # 广告拦截
+  - RULE-SET,category-ads,AdBlock
+
   # 私有网络直连
   - RULE-SET,private,直连
 
@@ -108130,11 +108220,8 @@ rules:
   # 可选：专用浏览器的全部 UDP 也交给 Discord 组；按实际进程名取消注释。
   # - AND,((NETWORK,UDP),(PROCESS-NAME,firefox.exe)),Discord
 
-  # 可选：取消下一行注释以屏蔽代理 QUIC；Discord 优先分流。默认关闭。
-  # - SUB-RULE,meow-quic
-
-  # 广告拦截
-  - RULE-SET,category-ads,AdBlock
+  # 可选：取消下一行注释以屏蔽代理 QUIC；Discord 优先分流，放行国内与已知国内/私有 IP。默认关闭。
+  # - AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn),(RULE-SET,cn_ip,no-resolve),(RULE-SET,private_ip,no-resolve)))))),REJECT
 
   # 代理规则
   - RULE-SET,google,Google
@@ -108147,20 +108234,12 @@ rules:
 
   - RULE-SET,geolocation-!cn,默认代理
 
-  # IP 规则在全部域名规则之后解析目标地址。
+  # IP 规则在全部域名规则之后解析目标地址，国内和私有 IP 优先直连。
+  - RULE-SET,cn_ip,直连
+  - RULE-SET,private_ip,直连
+
   - RULE-SET,google_ip,Google
   - RULE-SET,telegram_ip,Telegram
   - RULE-SET,steam_ip,Steam
 
-  # 兜底规则
-  - RULE-SET,cn_ip,直连
-  - RULE-SET,private_ip,直连
   - MATCH,漏网之鱼
-
-# 可选 QUIC 子规则：cn 域名或国内 IP 放行，其余 UDP 443 拒绝；PASS 返回主规则链。
-sub-rules:
-  meow-quic:
-    - NOT,((AND,((NETWORK,UDP),(DST-PORT,443)))),PASS
-    - RULE-SET,cn,PASS
-    - RULE-SET,cn_ip,PASS,no-resolve
-    - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
